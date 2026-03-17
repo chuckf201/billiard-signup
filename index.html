@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Men's Tuesday Billiard League – Sign Up</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-deep:    #0d2e1a;
+    --green-dark:    #143d22;
+    --green-mid:     #1a5c30;
+    --green-felt:    #1e6b38;
+    --green-light:   #2a8a4a;
+    --gold:          #c9a84c;
+    --gold-light:    #e8c96a;
+    --gold-dim:      #8a6f2e;
+    --cream:         #f5f0e8;
+    --white:         #ffffff;
+    --red:           #c0392b;
+    --red-dark:      #922b21;
+    --gray-dark:     #2c2c2c;
+    --radius:        10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: var(--green-deep);
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(26,92,48,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(13,46,26,0.6) 0%, transparent 60%),
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 40px,
+        rgba(255,255,255,0.012) 40px,
+        rgba(255,255,255,0.012) 41px
+      );
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 30px 16px 50px;
+    font-family: 'Crimson Pro', Georgia, serif;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 620px;
+    background: var(--green-dark);
+    border: 2px solid var(--gold-dim);
+    border-radius: 16px;
+    box-shadow:
+      0 0 0 1px rgba(201,168,76,0.15),
+      0 8px 40px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(201,168,76,0.2);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Corner diamonds */
+  .card::before, .card::after {
+    content: '◆';
+    position: absolute;
+    color: var(--gold-dim);
+    font-size: 11px;
+    opacity: 0.7;
+  }
+  .card::before { top: 14px; left: 18px; }
+  .card::after  { top: 14px; right: 18px; }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(180deg, var(--green-mid) 0%, var(--green-dark) 100%);
+    border-bottom: 1px solid var(--gold-dim);
+    padding: 28px 24px 20px;
+    text-align: center;
+  }
+
+  .club-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .league-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  .league-title span {
+    color: var(--gold);
+  }
+
+  .season-dates {
+    font-family: 'Crimson Pro', serif;
+    font-size: 13px;
+    color: rgba(245,240,232,0.65);
+    letter-spacing: 0.5px;
+    margin-bottom: 14px;
+  }
+
+  .balls-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .ball {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    box-shadow: inset -3px -2px 4px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .b1  { background: #f0f0f0; }
+  .b2  { background: #f5d800; }
+  .b3  { background: #c0392b; }
+  .b4  { background: #2471a3; }
+  .b5  { background: #7d3c98; }
+  .b6  { background: #e67e22; }
+  .b8  { background: #1c1c1c; }
+
+  /* ── END DATES PANEL ── */
+  .end-dates-panel {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 4px;
+  }
+
+  .end-date-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(201,168,76,0.25);
+    background: rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    min-width: 110px;
+  }
+
+  .end-date-chip.likely {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.18);
+    box-shadow: 0 0 12px rgba(201,168,76,0.25);
+  }
+
+  .end-date-chip.dimmed {
+    opacity: 0.38;
+  }
+
+  .chip-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.5);
+    margin-bottom: 2px;
+  }
+
+  .end-date-chip.likely .chip-label {
+    color: var(--gold);
+  }
+
+  .chip-date {
+    font-family: 'Crimson Pro', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--cream);
+  }
+
+  .end-date-chip.likely .chip-date {
+    color: var(--gold-light);
+  }
+
+  .chip-likely-tag {
+    font-family: 'Oswald', sans-serif;
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 2px;
+    display: none;
+  }
+
+  .end-date-chip.likely .chip-likely-tag {
+    display: block;
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border-bottom: 1px solid rgba(201,168,76,0.25);
+  }
+
+  .stat {
+    padding: 14px 10px;
+    text-align: center;
+    border-right: 1px solid rgba(201,168,76,0.2);
+  }
+  .stat:last-child { border-right: none; }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+    display: block;
+  }
+
+  .stat-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(245,240,232,0.5);
+    text-transform: uppercase;
+    margin-top: 3px;
+    display: block;
+  }
+
+  .stat-icon {
+    font-size: 10px;
+    display: block;
+    color: var(--gold-dim);
+    margin-bottom: 2px;
+  }
+
+  /* ── SIGNED UP STRIP ── */
+  .signed-strip {
+    background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(201,168,76,0.15);
+    padding: 8px 20px;
+  }
+
+  .signed-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(245,240,232,0.45);
+    text-transform: uppercase;
+  }
+
+  .signed-names {
+    font-family: 'Crimson Pro', serif;
+    font-size: 13px;
+    color: var(--gold-light);
+    font-style: italic;
+  }
+
+  /* ── FORM BODY ── */
+  .form-body {
+    padding: 28px 28px 24px;
+  }
+
+  .welcome-text {
+    text-align: center;
+    margin-bottom: 26px;
+  }
+
+  .welcome-text p:first-child {
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.2rem;
+    color: var(--cream);
+  }
+
+  .welcome-text .member-name {
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  .welcome-text p:last-child {
+    font-size: 1rem;
+    color: rgba(245,240,232,0.65);
+    margin-top: 4px;
+  }
+
+  /* ── FIELD GROUPS ── */
+  .field-group {
+    margin-bottom: 22px;
+  }
+
+  .field-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  /* Dropdown */
+  .dropdown-wrap {
+    position: relative;
+  }
+
+  select {
+    width: 100%;
+    padding: 13px 40px 13px 16px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: var(--radius);
+    color: var(--cream);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.05rem;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    outline: none;
+  }
+
+  select:focus {
+    border-color: var(--gold);
+    background: rgba(0,0,0,0.45);
+  }
+
+  select option {
+    background: var(--green-deep);
+    color: var(--cream);
+  }
+
+  .dropdown-arrow {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold);
+    font-size: 12px;
+    pointer-events: none;
+  }
+
+  /* Toggle buttons */
+  .toggle-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .toggle-btn {
+    padding: 13px 8px;
+    background: rgba(0,0,0,0.25);
+    border: none;
+    border-right: 1px solid rgba(201,168,76,0.2);
+    color: rgba(245,240,232,0.5);
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .toggle-btn:last-child { border-right: none; }
+
+  .toggle-btn:hover {
+    background: rgba(255,255,255,0.07);
+    color: var(--cream);
+  }
+
+  .toggle-btn.active-yes {
+    background: var(--green-light);
+    color: var(--white);
+    font-weight: 600;
+  }
+
+  .toggle-btn.active-maybe {
+    background: rgba(201,168,76,0.25);
+    color: var(--gold-light);
+    font-weight: 600;
+  }
+
+  .toggle-btn.active-no {
+    background: var(--red-dark);
+    color: var(--white);
+    font-weight: 600;
+  }
+
+  /* Sub toggle (2 buttons) */
+  .sub-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .sub-btn {
+    padding: 13px 8px;
+    background: rgba(0,0,0,0.25);
+    border: none;
+    border-right: 1px solid rgba(201,168,76,0.2);
+    color: rgba(245,240,232,0.5);
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .sub-btn:last-child { border-right: none; }
+  .sub-btn:hover { background: rgba(255,255,255,0.07); color: var(--cream); }
+
+  .sub-btn.active-needs {
+    background: var(--gold-dim);
+    color: var(--white);
+    font-weight: 600;
+  }
+
+  .sub-btn.active-none {
+    background: var(--red-dark);
+    color: var(--white);
+    font-weight: 600;
+  }
+
+  /* Email input */
+  input[type="email"] {
+    width: 100%;
+    padding: 13px 16px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: var(--radius);
+    color: var(--cream);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.05rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="email"]:focus {
+    border-color: var(--gold);
+    background: rgba(0,0,0,0.45);
+  }
+
+  input[type="email"]::placeholder {
+    color: rgba(245,240,232,0.35);
+  }
+
+  /* ── SUBMIT BUTTON ── */
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--gold-dim) 0%, var(--gold) 100%);
+    border: none;
+    border-radius: var(--radius);
+    color: var(--green-deep);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s, transform 0.1s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+
+  .submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .submit-btn:active { transform: translateY(0); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ── CONFIRMATION ── */
+  .confirmation {
+    display: none;
+    background: rgba(42,138,74,0.2);
+    border: 1px solid rgba(42,138,74,0.5);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-top: 16px;
+    text-align: center;
+    color: var(--cream);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .confirmation.show { display: block; }
+
+  .confirmation strong {
+    color: var(--gold-light);
+    display: block;
+    margin-bottom: 4px;
+    font-size: 1.05rem;
+  }
+
+  /* ── ERROR ── */
+  .error-msg {
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 6px;
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 0.5px;
+    display: none;
+  }
+
+  .error-msg.show { display: block; }
+
+  /* ── FOOTER ── */
+  .form-footer {
+    border-top: 1px solid rgba(201,168,76,0.2);
+    padding: 14px 24px;
+    text-align: center;
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(245,240,232,0.3);
+    text-transform: uppercase;
+  }
+
+  .form-footer span { margin: 0 8px; color: var(--gold-dim); }
+
+  /* Loading spinner */
+  .spinner {
+    display: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(13,46,26,0.3);
+    border-top-color: var(--green-deep);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .submit-inner { display: flex; align-items: center; justify-content: center; gap: 10px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Corner diamonds via CSS -->
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="club-name">Spruce Creek Golf &amp; Country Club</div>
+    <h1 class="league-title">Men's <span>Tuesday</span> Billiard League</h1>
+    <div class="season-dates" id="season-start-line">Loading…</div>
+    <div class="end-dates-panel" id="end-dates-panel"></div>
+    <div class="balls-row">
+      <div class="ball b1"></div>
+      <div class="ball b2"></div>
+      <div class="ball b3"></div>
+      <div class="ball b4"></div>
+      <div class="ball b5"></div>
+      <div class="ball b6"></div>
+      <div class="ball b8"></div>
+    </div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat">
+      <span class="stat-icon">✓</span>
+      <span class="stat-num" id="stat-registered">—</span>
+      <span class="stat-label">Registered</span>
+    </div>
+    <div class="stat">
+      <span class="stat-icon">○</span>
+      <span class="stat-num" id="stat-open">—</span>
+      <span class="stat-label">Open Slots</span>
+    </div>
+    <div class="stat">
+      <span class="stat-icon">✕</span>
+      <span class="stat-num" id="stat-declined">—</span>
+      <span class="stat-label">Declined</span>
+    </div>
+  </div>
+
+  <!-- SIGNED UP STRIP -->
+  <div class="signed-strip">
+    <span class="signed-label">Signed up: </span>
+    <span class="signed-names" id="signed-names">—</span>
+  </div>
+
+  <!-- FORM BODY -->
+  <div class="form-body">
+
+    <div class="welcome-text">
+      <p>Welcome, <span class="member-name" id="welcome-name">Member</span>!</p>
+      <p>Please confirm your participation for the upcoming season.</p>
+    </div>
+
+    <form id="signup-form" novalidate>
+
+      <!-- NAME DROPDOWN -->
+      <div class="field-group">
+        <label class="field-label" for="member-name">Your Name</label>
+        <div class="dropdown-wrap">
+          <select id="member-name" name="member-name" required>
+            <option value="">— Select your name —</option>
+            <!-- ═══════════════════════════════════════════════
+                 MEMBER LIST — edit names here each season
+                 ═══════════════════════════════════════════════ -->
+            <option>Al Bachetti</option>
+            <option>Ben Barclay</option>
+            <option>Bill Bellm</option>
+            <option>Bill Fanning</option>
+            <option>Bob Atkinson</option>
+            <option>Bob Rooney</option>
+            <option>Brian Bellm</option>
+            <option>Bryan Freer</option>
+            <option>Chuck Fingerman</option>
+            <option>Dan Onorato</option>
+            <option>Dave Gerber</option>
+            <option>Dave Hollowell</option>
+            <option>Dave Larson</option>
+            <option>Don Hall</option>
+            <option>Frank Grasso</option>
+            <option>Gary Swanson</option>
+            <option>Gene Knapp</option>
+            <option>Greg Gerber</option>
+            <option>Jack Prest</option>
+            <option>Jim Bergin</option>
+            <option>John Deluco</option>
+            <option>John Perloff</option>
+            <option>Mike Lavallee</option>
+            <option>Ron Hagy</option>
+            <option>Steve Rice</option>
+            <!-- ADD MORE MEMBERS ABOVE THIS LINE -->
+          </select>
+          <div class="dropdown-arrow">▼</div>
+        </div>
+        <div class="error-msg" id="err-name">Please select your name.</div>
+      </div>
+
+      <!-- PARTICIPATION TOGGLE -->
+      <div class="field-group">
+        <label class="field-label">Will you participate this season?</label>
+        <div class="toggle-group">
+          <button type="button" class="toggle-btn active-yes" data-value="Yes" id="btn-yes" onclick="setParticipation('Yes')">
+            ✓ Yes, I'm In!
+          </button>
+          <button type="button" class="toggle-btn" data-value="Maybe" id="btn-maybe" onclick="setParticipation('Maybe')">
+            – No… But
+          </button>
+          <button type="button" class="toggle-btn" data-value="No" id="btn-no" onclick="setParticipation('No')">
+            ✕ I'm Out
+          </button>
+        </div>
+        <input type="hidden" id="participation" value="Yes">
+      </div>
+
+      <!-- SUB TOGGLE (shown only when Yes or Maybe) -->
+      <div class="field-group" id="sub-section">
+        <label class="field-label">Do you need a substitute for any weeks?</label>
+        <div class="sub-group">
+          <button type="button" class="sub-btn" id="btn-needs-sub" onclick="setSub('Yes')">
+            Yes, I Need a Sub
+          </button>
+          <button type="button" class="sub-btn active-none" id="btn-no-sub" onclick="setSub('No')">
+            No Sub Needed
+          </button>
+        </div>
+        <input type="hidden" id="sub-needed" value="No">
+      </div>
+
+      <!-- EMAIL -->
+      <div class="field-group">
+        <label class="field-label" for="member-email">Confirm Your Email</label>
+        <input type="email" id="member-email" name="member-email"
+               placeholder="yourname@email.com" required>
+        <div class="error-msg" id="err-email">Please enter a valid email address.</div>
+      </div>
+
+      <!-- SUBMIT -->
+      <button type="submit" class="submit-btn" id="submit-btn">
+        <div class="submit-inner">
+          <div class="spinner" id="spinner"></div>
+          <span id="submit-label">Submit My Response</span>
+        </div>
+      </button>
+
+      <!-- CONFIRMATION -->
+      <div class="confirmation" id="confirmation">
+        <strong id="conf-headline">✓ Response Submitted!</strong>
+        <span id="conf-message"></span>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="form-footer">
+    Spruce Creek Golf &amp; Country Club
+    <span>·</span>
+    Men's Billiard League
+    <span>·</span>
+    Members Only
+  </div>
+
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════════════════════
+  //  CONFIGURATION — Edit these values each season
+  // ═══════════════════════════════════════════════════════════════
+  const CONFIG = {
+    // Google Apps Script Web App URL
+    SCRIPT_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec',
+
+    // ── Season start date (format: YYYY-MM-DD, must be a Tuesday) ──
+    seasonStart: '2026-03-03',
+
+    // ── Skip weeks (holidays/breaks between start and end)
+    //    Set to 1 or 2 if there's a week off during the season
+    skipWeeks: 0,
+
+    // Total league slots
+    totalSlots: 24,
+
+    // Admin email
+    adminEmail: 'monrovian@gmail.com',
+  };
+  // ═══════════════════════════════════════════════════════════════
+
+  // ── Teams → Weeks mapping ──
+  // Key = number of teams, Value = number of playing weeks
+  const SCHEDULE_MAP = [
+    { teams: 3, weeks: 3, minPlayers: 6,  maxPlayers: 12 },
+    { teams: 4, weeks: 3, minPlayers: 13, maxPlayers: 16 },
+    { teams: 5, weeks: 5, minPlayers: 17, maxPlayers: 20 },
+    { teams: 6, weeks: 5, minPlayers: 21, maxPlayers: 24 },
+  ];
+
+  // ── Calculate a Tuesday end date from start + N weeks + skipWeeks ──
+  function calcEndDate(startDateStr, playWeeks, skipWeeks) {
+    const start = new Date(startDateStr + 'T12:00:00');
+    const totalWeeks = playWeeks + skipWeeks;
+    const end = new Date(start);
+    end.setDate(start.getDate() + (totalWeeks - 1) * 7);
+    return end;
+  }
+
+  // ── Format date as MM-DD-YYYY ──
+  function fmtDate(d) {
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${mm}-${dd}-${d.getFullYear()}`;
+  }
+
+  // ── Determine most likely scenario from registered count ──
+  function getLikelyScenario(registered) {
+    let best = SCHEDULE_MAP[0];
+    for (const s of SCHEDULE_MAP) {
+      if (registered >= s.minPlayers) best = s;
+    }
+    return best;
+  }
+
+  // ── Render the end-dates panel ──
+  function renderEndDates(registered) {
+    const panel    = document.getElementById('end-dates-panel');
+    const likely   = getLikelyScenario(registered);
+    const startStr = CONFIG.seasonStart;
+
+    panel.innerHTML = SCHEDULE_MAP.map(s => {
+      const endDate  = calcEndDate(startStr, s.weeks, CONFIG.skipWeeks);
+      const isLikely = (s.teams === likely.teams);
+      const cls      = isLikely ? 'end-date-chip likely' : 'end-date-chip dimmed';
+      return `
+        <div class="${cls}">
+          <span class="chip-label">${s.teams} Teams · ${s.weeks} Wks</span>
+          <span class="chip-date">End: ${fmtDate(endDate)}</span>
+          <span class="chip-likely-tag">★ Most Likely</span>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Populate start date line ──
+  const startDisplay = new Date(CONFIG.seasonStart + 'T12:00:00');
+  document.getElementById('season-start-line').textContent =
+    `Start: ${fmtDate(startDisplay)}  ·  Possible End Dates ↓`;
+
+  // Initial render with 0 registered (updates after stats load)
+  renderEndDates(0);
+
+  // ── Load live stats from the Apps Script ──
+  function loadStats() {
+    fetch(CONFIG.SCRIPT_URL + '?action=stats')
+      .then(r => r.json())
+      .then(data => {
+        const reg = data.registered ?? 0;
+        document.getElementById('stat-registered').textContent = reg;
+        document.getElementById('stat-open').textContent       = Math.max(0, CONFIG.totalSlots - reg);
+        document.getElementById('stat-declined').textContent   = data.declined ?? 0;
+        const names = (data.signedUpNames || []).join(', ') || '—';
+        document.getElementById('signed-names').textContent = names;
+        // Re-render end dates with live count
+        renderEndDates(reg);
+      })
+      .catch(() => {
+        document.getElementById('stat-registered').textContent = '—';
+        document.getElementById('stat-open').textContent       = '—';
+        document.getElementById('stat-declined').textContent   = '—';
+      });
+  }
+
+  loadStats();
+
+  // ── State ──
+  let participation = 'Yes';
+  let subNeeded     = 'No';
+
+  // ── Update welcome name when dropdown changes ──
+  document.getElementById('member-name').addEventListener('change', function () {
+    const first = this.value.split(' ')[0] || 'Member';
+    document.getElementById('welcome-name').textContent = first || 'Member';
+  });
+
+  // ── Participation toggle ──
+  function setParticipation(val) {
+    participation = val;
+    document.getElementById('participation').value = val;
+
+    const btnYes   = document.getElementById('btn-yes');
+    const btnMaybe = document.getElementById('btn-maybe');
+    const btnNo    = document.getElementById('btn-no');
+    const subSec   = document.getElementById('sub-section');
+
+    btnYes.className   = 'toggle-btn';
+    btnMaybe.className = 'toggle-btn';
+    btnNo.className    = 'toggle-btn';
+
+    if (val === 'Yes') {
+      btnYes.className = 'toggle-btn active-yes';
+      subSec.style.display = 'block';
+    } else if (val === 'Maybe') {
+      btnMaybe.className = 'toggle-btn active-maybe';
+      subSec.style.display = 'block';
+    } else {
+      btnNo.className = 'toggle-btn active-no';
+      subSec.style.display = 'none';
+    }
+  }
+
+  // ── Sub toggle ──
+  function setSub(val) {
+    subNeeded = val;
+    document.getElementById('sub-needed').value = val;
+    document.getElementById('btn-needs-sub').className = val === 'Yes' ? 'sub-btn active-needs' : 'sub-btn';
+    document.getElementById('btn-no-sub').className    = val === 'No'  ? 'sub-btn active-none'  : 'sub-btn';
+  }
+
+  // ── Form submit ──
+  document.getElementById('signup-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const nameEl  = document.getElementById('member-name');
+    const emailEl = document.getElementById('member-email');
+    let valid = true;
+
+    // Validate name
+    if (!nameEl.value) {
+      document.getElementById('err-name').classList.add('show');
+      valid = false;
+    } else {
+      document.getElementById('err-name').classList.remove('show');
+    }
+
+    // Validate email
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value);
+    if (!emailOk) {
+      document.getElementById('err-email').classList.add('show');
+      valid = false;
+    } else {
+      document.getElementById('err-email').classList.remove('show');
+    }
+
+    if (!valid) return;
+
+    // Show spinner
+    document.getElementById('spinner').style.display = 'block';
+    document.getElementById('submit-label').textContent = 'Submitting…';
+    document.getElementById('submit-btn').disabled = true;
+
+    const payload = {
+      action:        'submit',
+      name:          nameEl.value,
+      email:         emailEl.value,
+      participation: participation,
+      subNeeded:     subNeeded,
+      timestamp:     new Date().toISOString(),
+      adminEmail:    CONFIG.adminEmail,
+    };
+
+    // POST to Apps Script
+    fetch(CONFIG.SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      mode: 'no-cors',   // required for Apps Script cross-origin
+    })
+    .then(() => {
+      showConfirmation(payload);
+      loadStats();
+    })
+    .catch(() => {
+      // no-cors mode always resolves — if it rejects, script URL not set yet
+      showConfirmation(payload, true);
+    });
+  });
+
+  function showConfirmation(data, offline = false) {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('submit-label').textContent = 'Response Submitted';
+
+    const conf = document.getElementById('confirmation');
+    const icon = data.participation === 'No' ? '✕' : '✓';
+    const verb = data.participation === 'Yes' ? "you're registered!" :
+                 data.participation === 'Maybe' ? "response received." : "you're marked as out.";
+
+    document.getElementById('conf-headline').textContent = `${icon}  ${data.name} — ${verb}`;
+    document.getElementById('conf-message').textContent  =
+      `A confirmation will be sent to ${data.email}.` +
+      (offline ? ' (Note: connect the Apps Script URL to enable emails.)' : '');
+
+    conf.classList.add('show');
+  }
+</script>
+
+</body>
+</html>
