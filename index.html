@@ -766,21 +766,26 @@
   // Initial render with 0 registered (updates after stats load)
   renderEndDates(0);
 
-  // ── JSONP helper — bypasses CORS completely ──
-  function jsonp(url, callbackName, onSuccess, onError) {
-    const script = document.createElement('script');
-    window[callbackName] = function(data) {
-      delete window[callbackName];
-      document.body.removeChild(script);
-      onSuccess(data);
-    };
-    script.src = url + '&callback=' + callbackName;
-    script.onerror = function() {
-      delete window[callbackName];
-      document.body.removeChild(script);
-      if (onError) onError();
-    };
-    document.body.appendChild(script);
+  // ── API call helper — fetches JSONP as text, parses out the JSON ──
+  function apiFetch(action, params, onSuccess, onError) {
+    const cbName = '_cb_' + action + '_' + Date.now();
+    const url    = CONFIG.SCRIPT_URL + '?action=' + action
+                 + (params ? '&' + new URLSearchParams(params).toString() : '')
+                 + '&callback=' + cbName;
+
+    // Try fetch first (works if Apps Script allows it)
+    fetch(url)
+      .then(r => r.text())
+      .then(text => {
+        // Strip the JSONP wrapper: cbName({...}) → {...}
+        const json = text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, '');
+        const data = JSON.parse(json);
+        onSuccess(data);
+      })
+      .catch(err => {
+        console.warn('apiFetch failed for ' + action + ':', err);
+        if (onError) onError();
+      });
   }
 
   // ── Email lookup map: fullName → email ──
@@ -788,16 +793,14 @@
 
   // ── Load live stats ──
   function loadStats() {
-    jsonp(
-      CONFIG.SCRIPT_URL + '?action=stats',
-      '_statsCallback',
+    apiFetch('stats', null,
       function(data) {
         const reg = data.registered ?? 0;
         document.getElementById('stat-registered').textContent = reg;
         document.getElementById('stat-open').textContent       = Math.max(0, CONFIG.totalSlots - reg);
         document.getElementById('stat-declined').textContent   = data.declined ?? 0;
         const names = (data.signedUpNames || []).join(', ') || '—';
-        document.getElementById('signed-names').textContent = names;
+        document.getElementById('signed-names').textContent    = names;
         renderEndDates(reg);
       },
       function() {
@@ -810,9 +813,7 @@
 
   // ── Load member list for dropdown ──
   function loadMembers() {
-    jsonp(
-      CONFIG.SCRIPT_URL + '?action=members',
-      '_membersCallback',
+    apiFetch('members', null,
       function(data) {
         if (!data.members || data.members.length === 0) return;
         const sel = document.getElementById('member-name');
@@ -931,27 +932,21 @@
       adminEmail:    CONFIG.adminEmail,
     };
 
-    // Submit via JSONP — fully bypasses CORS
-    const params = new URLSearchParams({
-      action:        'submit',
+    // Submit via apiFetch
+    apiFetch('submit', {
       name:          payload.name,
       email:         payload.email,
       participation: payload.participation,
       subNeeded:     payload.subNeeded,
       adminEmail:    payload.adminEmail,
+    },
+    function() {
+      showConfirmation(payload);
+      setTimeout(function() { loadStats(); }, 2500);
+    },
+    function() {
+      showConfirmation(payload, true);
     });
-
-    jsonp(
-      CONFIG.SCRIPT_URL + '?' + params.toString(),
-      '_submitCallback',
-      function() {
-        showConfirmation(payload);
-        setTimeout(function() { loadStats(); }, 2500);
-      },
-      function() {
-        showConfirmation(payload, true);
-      }
-    );
   });
 
   function showConfirmation(data, offline = false) {
