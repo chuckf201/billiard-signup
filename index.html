@@ -688,7 +688,7 @@
   // ═══════════════════════════════════════════════════════════════
   const CONFIG = {
     // Google Apps Script Web App URL
-    SCRIPT_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec',
+    SCRIPT_URL: 'SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec',
 
     // ── Season start date (format: YYYY-MM-DD, must be a Tuesday) ──
     seasonStart: '2026-03-03',
@@ -766,26 +766,37 @@
   // Initial render with 0 registered (updates after stats load)
   renderEndDates(0);
 
-  // ── API call helper — fetches JSONP as text, parses out the JSON ──
+  // ── JSONP helper — injects a script tag, bypasses CORS completely ──
+  // Uses a timeout to detect failures since onerror is unreliable
   function apiFetch(action, params, onSuccess, onError) {
-    const cbName = '_cb_' + action + '_' + Date.now();
-    const url    = CONFIG.SCRIPT_URL + '?action=' + action
-                 + (params ? '&' + new URLSearchParams(params).toString() : '')
-                 + '&callback=' + cbName;
+    const cbName  = '_cb_' + action.replace(/\W/g,'') + '_' + Date.now();
+    const timeout = setTimeout(function() {
+      cleanup();
+      console.warn('apiFetch timeout for: ' + action);
+      if (onError) onError();
+    }, 10000); // 10 second timeout
 
-    // Try fetch first (works if Apps Script allows it)
-    fetch(url)
-      .then(r => r.text())
-      .then(text => {
-        // Strip the JSONP wrapper: cbName({...}) → {...}
-        const json = text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, '');
-        const data = JSON.parse(json);
-        onSuccess(data);
-      })
-      .catch(err => {
-        console.warn('apiFetch failed for ' + action + ':', err);
-        if (onError) onError();
-      });
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      const el = document.getElementById(cbName);
+      if (el) el.parentNode.removeChild(el);
+    }
+
+    window[cbName] = function(data) {
+      cleanup();
+      onSuccess(data);
+    };
+
+    const base   = CONFIG.SCRIPT_URL + '?action=' + encodeURIComponent(action);
+    const extra  = params ? '&' + new URLSearchParams(params).toString() : '';
+    const src    = base + extra + '&callback=' + cbName;
+
+    const script    = document.createElement('script');
+    script.id       = cbName;
+    script.src      = src;
+    script.onerror  = function() { cleanup(); if (onError) onError(); };
+    document.head.appendChild(script);
   }
 
   // ── Email lookup map: fullName → email ──
