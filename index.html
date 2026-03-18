@@ -608,36 +608,7 @@
         <label class="field-label" for="member-name">Your Name</label>
         <div class="dropdown-wrap">
           <select id="member-name" name="member-name" required>
-            <option value="">— Select your name —</option>
-            <!-- ═══════════════════════════════════════════════
-                 MEMBER LIST — edit names here each season
-                 ═══════════════════════════════════════════════ -->
-            <option>Al Bachetti</option>
-            <option>Ben Barclay</option>
-            <option>Bill Bellm</option>
-            <option>Bill Fanning</option>
-            <option>Bob Atkinson</option>
-            <option>Bob Rooney</option>
-            <option>Brian Bellm</option>
-            <option>Bryan Freer</option>
-            <option>Chuck Fingerman</option>
-            <option>Dan Onorato</option>
-            <option>Dave Gerber</option>
-            <option>Dave Hollowell</option>
-            <option>Dave Larson</option>
-            <option>Don Hall</option>
-            <option>Frank Grasso</option>
-            <option>Gary Swanson</option>
-            <option>Gene Knapp</option>
-            <option>Greg Gerber</option>
-            <option>Jack Prest</option>
-            <option>Jim Bergin</option>
-            <option>John Deluco</option>
-            <option>John Perloff</option>
-            <option>Mike Lavallee</option>
-            <option>Ron Hagy</option>
-            <option>Steve Rice</option>
-            <!-- ADD MORE MEMBERS ABOVE THIS LINE -->
+            <option value="">— Loading members… —</option>
           </select>
           <div class="dropdown-arrow">▼</div>
         </div>
@@ -716,8 +687,8 @@
   //  CONFIGURATION — Edit these values each season
   // ═══════════════════════════════════════════════════════════════
   const CONFIG = {
-    // Google Apps Script Web App URL ***CMF replaced 3/18/2026
-    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec',
+    // Google Apps Script Web App URL
+    SCRIPT_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec',
 
     // ── Season start date (format: YYYY-MM-DD, must be a Tuesday) ──
     seasonStart: '2026-03-03',
@@ -795,7 +766,10 @@
   // Initial render with 0 registered (updates after stats load)
   renderEndDates(0);
 
-  // ── Load live stats from the Apps Script ──
+  // ── Email lookup map: fullName → email (populated from Members tab) ──
+  let memberEmailMap = {};
+
+  // ── Load live stats + member list from the Apps Script ──
   function loadStats() {
     fetch(CONFIG.SCRIPT_URL + '?action=stats')
       .then(r => r.json())
@@ -806,13 +780,30 @@
         document.getElementById('stat-declined').textContent   = data.declined ?? 0;
         const names = (data.signedUpNames || []).join(', ') || '—';
         document.getElementById('signed-names').textContent = names;
-        // Re-render end dates with live count
         renderEndDates(reg);
+
+        // ── Populate name dropdown from Members tab ──
+        if (data.members && data.members.length > 0) {
+          const sel = document.getElementById('member-name');
+          sel.innerHTML = '<option value="">— Select your name —</option>';
+          memberEmailMap = {};
+
+          data.members.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value       = m.name;
+            opt.textContent = m.name;
+            sel.appendChild(opt);
+            if (m.email) memberEmailMap[m.name] = m.email;
+          });
+        }
       })
       .catch(() => {
         document.getElementById('stat-registered').textContent = '—';
         document.getElementById('stat-open').textContent       = '—';
         document.getElementById('stat-declined').textContent   = '—';
+        // Fallback: restore a basic prompt if Members tab unreachable
+        document.getElementById('member-name').innerHTML =
+          '<option value="">— Select your name —</option>';
       });
   }
 
@@ -822,10 +813,19 @@
   let participation = 'Yes';
   let subNeeded     = 'No';
 
-  // ── Update welcome name when dropdown changes ──
+  // ── Update welcome name + auto-fill email when dropdown changes ──
   document.getElementById('member-name').addEventListener('change', function () {
-    const first = this.value.split(' ')[0] || 'Member';
-    document.getElementById('welcome-name').textContent = first || 'Member';
+    const selected = this.value;
+    const first    = selected.split(' ')[0] || 'Member';
+    document.getElementById('welcome-name').textContent = first;
+
+    // Auto-fill email if found in Members tab
+    const emailEl = document.getElementById('member-email');
+    if (selected && memberEmailMap[selected]) {
+      emailEl.value = memberEmailMap[selected];
+    } else {
+      emailEl.value = '';
+    }
   });
 
   // ── Participation toggle ──
@@ -904,19 +904,25 @@
       adminEmail:    CONFIG.adminEmail,
     };
 
-    // POST to Apps Script
-    fetch(CONFIG.SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      mode: 'no-cors',   // required for Apps Script cross-origin
+    // Submit via URL params GET — bypasses CORS for Apps Script from GitHub Pages
+    const params = new URLSearchParams({
+      action:        'submit',
+      name:          payload.name,
+      email:         payload.email,
+      participation: payload.participation,
+      subNeeded:     payload.subNeeded,
+      adminEmail:    payload.adminEmail,
+    });
+
+    fetch(CONFIG.SCRIPT_URL + '?' + params.toString(), {
+      method: 'GET',
+      mode:   'no-cors',
     })
     .then(() => {
       showConfirmation(payload);
-      loadStats();
+      setTimeout(() => loadStats(), 2500); // small delay to let Sheet update
     })
     .catch(() => {
-      // no-cors mode always resolves — if it rejects, script URL not set yet
       showConfirmation(payload, true);
     });
   });
