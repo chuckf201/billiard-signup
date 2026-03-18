@@ -766,14 +766,32 @@
   // Initial render with 0 registered (updates after stats load)
   renderEndDates(0);
 
-  // ── Email lookup map: fullName → email (populated from Members tab) ──
+  // ── JSONP helper — bypasses CORS completely ──
+  function jsonp(url, callbackName, onSuccess, onError) {
+    const script = document.createElement('script');
+    window[callbackName] = function(data) {
+      delete window[callbackName];
+      document.body.removeChild(script);
+      onSuccess(data);
+    };
+    script.src = url + '&callback=' + callbackName;
+    script.onerror = function() {
+      delete window[callbackName];
+      document.body.removeChild(script);
+      if (onError) onError();
+    };
+    document.body.appendChild(script);
+  }
+
+  // ── Email lookup map: fullName → email ──
   let memberEmailMap = {};
 
-  // ── Load live stats + member list from the Apps Script ──
+  // ── Load live stats ──
   function loadStats() {
-    fetch(CONFIG.SCRIPT_URL + '?action=stats')
-      .then(r => r.json())
-      .then(data => {
+    jsonp(
+      CONFIG.SCRIPT_URL + '?action=stats',
+      '_statsCallback',
+      function(data) {
         const reg = data.registered ?? 0;
         document.getElementById('stat-registered').textContent = reg;
         document.getElementById('stat-open').textContent       = Math.max(0, CONFIG.totalSlots - reg);
@@ -781,33 +799,42 @@
         const names = (data.signedUpNames || []).join(', ') || '—';
         document.getElementById('signed-names').textContent = names;
         renderEndDates(reg);
-
-        // ── Populate name dropdown from Members tab ──
-        if (data.members && data.members.length > 0) {
-          const sel = document.getElementById('member-name');
-          sel.innerHTML = '<option value="">— Select your name —</option>';
-          memberEmailMap = {};
-
-          data.members.forEach(m => {
-            const opt = document.createElement('option');
-            opt.value       = m.name;
-            opt.textContent = m.name;
-            sel.appendChild(opt);
-            if (m.email) memberEmailMap[m.name] = m.email;
-          });
-        }
-      })
-      .catch(() => {
+      },
+      function() {
         document.getElementById('stat-registered').textContent = '—';
         document.getElementById('stat-open').textContent       = '—';
         document.getElementById('stat-declined').textContent   = '—';
-        // Fallback: restore a basic prompt if Members tab unreachable
+      }
+    );
+  }
+
+  // ── Load member list for dropdown ──
+  function loadMembers() {
+    jsonp(
+      CONFIG.SCRIPT_URL + '?action=members',
+      '_membersCallback',
+      function(data) {
+        if (!data.members || data.members.length === 0) return;
+        const sel = document.getElementById('member-name');
+        sel.innerHTML = '<option value="">— Select your name —</option>';
+        memberEmailMap = {};
+        data.members.forEach(function(m) {
+          const opt       = document.createElement('option');
+          opt.value       = m.name;
+          opt.textContent = m.name;
+          sel.appendChild(opt);
+          if (m.email) memberEmailMap[m.name] = m.email;
+        });
+      },
+      function() {
         document.getElementById('member-name').innerHTML =
-          '<option value="">— Select your name —</option>';
-      });
+          '<option value="">— Could not load members —</option>';
+      }
+    );
   }
 
   loadStats();
+  loadMembers();
 
   // ── State ──
   let participation = 'Yes';
@@ -904,7 +931,7 @@
       adminEmail:    CONFIG.adminEmail,
     };
 
-    // Submit via URL params GET — bypasses CORS for Apps Script from GitHub Pages
+    // Submit via JSONP — fully bypasses CORS
     const params = new URLSearchParams({
       action:        'submit',
       name:          payload.name,
@@ -914,17 +941,17 @@
       adminEmail:    payload.adminEmail,
     });
 
-    fetch(CONFIG.SCRIPT_URL + '?' + params.toString(), {
-      method: 'GET',
-      mode:   'no-cors',
-    })
-    .then(() => {
-      showConfirmation(payload);
-      setTimeout(() => loadStats(), 2500); // small delay to let Sheet update
-    })
-    .catch(() => {
-      showConfirmation(payload, true);
-    });
+    jsonp(
+      CONFIG.SCRIPT_URL + '?' + params.toString(),
+      '_submitCallback',
+      function() {
+        showConfirmation(payload);
+        setTimeout(function() { loadStats(); }, 2500);
+      },
+      function() {
+        showConfirmation(payload, true);
+      }
+    );
   });
 
   function showConfirmation(data, offline = false) {
