@@ -688,7 +688,7 @@
   // ═══════════════════════════════════════════════════════════════
   const CONFIG = {
     // Google Apps Script Web App URL
-    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec',
+    SCRIPT_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec',
 
     // ── Season start date (format: YYYY-MM-DD, must be a Tuesday) ──
     seasonStart: '2026-03-03',
@@ -802,16 +802,27 @@
   // ── Email lookup map: fullName → email ──
   let memberEmailMap = {};
 
-  // ── Load live stats ──
+  // ── Load live stats + season config from sheet ──
   function loadStats() {
     apiFetch('stats', null,
       function(data) {
         const reg = data.registered ?? 0;
         document.getElementById('stat-registered').textContent = reg;
-        document.getElementById('stat-open').textContent       = Math.max(0, CONFIG.totalSlots - reg);
+        document.getElementById('stat-open').textContent       = Math.max(0, (data.totalSlots || CONFIG.totalSlots) - reg);
         document.getElementById('stat-declined').textContent   = data.declined ?? 0;
         const names = (data.signedUpNames || []).join(', ') || '—';
         document.getElementById('signed-names').textContent    = names;
+
+        // Apply season config from sheet if available
+        if (data.seasonStart) CONFIG.seasonStart = data.seasonStart;
+        if (data.skipWeeks  !== undefined) CONFIG.skipWeeks  = data.skipWeeks;
+        if (data.totalSlots !== undefined) CONFIG.totalSlots = data.totalSlots;
+
+        // Update start date display
+        const startDisplay = new Date(CONFIG.seasonStart + 'T12:00:00');
+        document.getElementById('season-start-line').textContent =
+          'Start: ' + fmtDate(startDisplay) + '  ·  Possible End Dates ↓';
+
         renderEndDates(reg);
       },
       function() {
