@@ -1,4 +1,27 @@
 <!DOCTYPE html>
+<!--
+═══════════════════════════════════════════════════════════════
+  SCGCC Tuesday Men's Billiard League — Signup Form
+  File:     billiards_signup.html (deployed as index.html)
+  Host:     https://chuckf201.github.io/billiard-signup
+─────────────────────────────────────────────────────────────
+  VERSION HISTORY
+  v1.0  2026-03-16  Initial working form — JSONP, Sheet logging, emails
+  v1.1  2026-03-18  Live member dropdown from Members tab, email auto-fill
+  v1.2  2026-03-19  Dynamic end dates panel, most likely highlighted
+  v1.3  2026-03-20  Config tab — all season settings from Google Sheet
+  v1.4  2026-03-20  Scrollable signed-up names strip
+  v1.5  2026-03-21  Sub date checkboxes — Tuesday dates auto-generated
+  v1.6  2026-03-22  Script: filter members by Paid=X or M only (col D)
+─────────────────────────────────────────────────────────────
+  DEPLOY CHECKLIST (each update)
+  [ ] Set SCRIPT_URL on line ~700 to your Apps Script /exec URL
+  [ ] Verify seasonStart fallback date is reasonable
+  [ ] Commit to GitHub with message: vX.X — YYYY-MM-DD — Description
+  [ ] Create GitHub Release tagged vX.X-YYYY-MM-DD
+  [ ] Hard refresh form (Ctrl+Shift+R) to verify
+═══════════════════════════════════════════════════════════════
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -6,7 +29,7 @@
 <title>Men's Tuesday Billiard League – Sign Up</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root { 
+  :root {
     --green-deep:    #0d2e1a;
     --green-dark:    #143d22;
     --green-mid:     #1a5c30;
@@ -243,7 +266,7 @@
   .signed-strip {
     background: rgba(0,0,0,0.2);
     border-bottom: 1px solid rgba(201,168,76,0.15);
-    padding: 8px 20px;
+    padding: 10px 20px;
   }
 
   .signed-label {
@@ -252,13 +275,56 @@
     letter-spacing: 2px;
     color: rgba(245,240,232,0.45);
     text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .signed-scroll {
+    max-height: 72px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold-dim) transparent;
+  }
+
+  .signed-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .signed-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .signed-scroll::-webkit-scrollbar-thumb {
+    background: var(--gold-dim);
+    border-radius: 2px;
   }
 
   .signed-names {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    padding-right: 6px;
+  }
+
+  .signed-name-chip {
     font-family: 'Crimson Pro', serif;
     font-size: 13px;
     color: var(--gold-light);
     font-style: italic;
+    white-space: nowrap;
+  }
+
+  .signed-name-chip::after {
+    content: '·';
+    margin-left: 12px;
+    color: var(--gold-dim);
+    opacity: 0.5;
+    font-style: normal;
+  }
+
+  .signed-name-chip:last-child::after {
+    content: '';
+    margin-left: 0;
   }
 
   /* ── FORM BODY ── */
@@ -433,6 +499,71 @@
     font-weight: 600;
   }
 
+  /* ── SUB DATES PANEL ── */
+  .sub-dates-panel {
+    display: none;
+    margin-top: 12px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .sub-dates-panel.show { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .sub-dates-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .sub-dates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+  }
+
+  .sub-date-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .sub-date-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--gold);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .sub-date-label {
+    font-family: 'Crimson Pro', serif;
+    font-size: 14px;
+    color: var(--cream);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .sub-date-item:hover .sub-date-label { color: var(--gold-light); }
+  .sub-dates-error {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    color: #e74c3c;
+    letter-spacing: 0.5px;
+    margin-top: 8px;
+    display: none;
+  }
+  .sub-dates-error.show { display: block; }
+
   /* Email input */
   input[type="email"] {
     width: 100%;
@@ -589,8 +720,10 @@
 
   <!-- SIGNED UP STRIP -->
   <div class="signed-strip">
-    <span class="signed-label">Signed up: </span>
-    <span class="signed-names" id="signed-names">—</span>
+    <span class="signed-label">Signed up: <span id="signed-count"></span></span>
+    <div class="signed-scroll">
+      <div class="signed-names" id="signed-names"></div>
+    </div>
   </div>
 
   <!-- FORM BODY -->
@@ -644,6 +777,15 @@
           </button>
         </div>
         <input type="hidden" id="sub-needed" value="No">
+
+        <!-- SUB DATES PANEL — shown when Yes I Need a Sub is selected -->
+        <div class="sub-dates-panel" id="sub-dates-panel">
+          <span class="sub-dates-title">Which Tuesday(s) do you need a sub?</span>
+          <div class="sub-dates-grid" id="sub-dates-grid">
+            <!-- Populated dynamically from season start date -->
+          </div>
+          <div class="sub-dates-error" id="err-sub-dates">Please select at least one date.</div>
+        </div>
       </div>
 
       <!-- EMAIL -->
@@ -687,7 +829,7 @@
   //  CONFIGURATION — Edit these values each season
   // ═══════════════════════════════════════════════════════════════
   const CONFIG = {
-    // Google Apps Script Web App URL
+    // Google Apps Script Web App URL 3/22/2026
     SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec',
 
     // ── Season start date (format: YYYY-MM-DD, must be a Tuesday) ──
@@ -810,8 +952,19 @@
         document.getElementById('stat-registered').textContent = reg;
         document.getElementById('stat-open').textContent       = Math.max(0, (data.totalSlots || CONFIG.totalSlots) - reg);
         document.getElementById('stat-declined').textContent   = data.declined ?? 0;
-        const names = (data.signedUpNames || []).join(', ') || '—';
-        document.getElementById('signed-names').textContent    = names;
+        const signedUpNames = data.signedUpNames || [];
+        const namesEl = document.getElementById('signed-names');
+        const countEl = document.getElementById('signed-count');
+
+        if (signedUpNames.length === 0) {
+          namesEl.innerHTML = '<span class="signed-name-chip" style="opacity:0.4;font-style:normal;">None yet</span>';
+          countEl.textContent = '';
+        } else {
+          countEl.textContent = '(' + signedUpNames.length + ')';
+          namesEl.innerHTML = signedUpNames.map(function(name) {
+            return '<span class="signed-name-chip">' + name + '</span>';
+          }).join('');
+        }
 
         // Apply season config from sheet if available
         if (data.seasonStart) CONFIG.seasonStart = data.seasonStart;
@@ -904,12 +1057,59 @@
     }
   }
 
+  // ── Generate Tuesday dates for the season ──
+  function getSeasonTuesdays() {
+    const tuesdays = [];
+    const start    = new Date(CONFIG.seasonStart + 'T12:00:00');
+    const likely   = getLikelyScenario(0); // use max weeks for full range
+    const maxWeeks = SCHEDULE_MAP[SCHEDULE_MAP.length - 1].weeks + CONFIG.skipWeeks;
+
+    for (let w = 0; w < maxWeeks; w++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + w * 7);
+      tuesdays.push(fmtDate(d));
+    }
+    return tuesdays;
+  }
+
+  // ── Build the sub dates checkboxes ──
+  function buildSubDates() {
+    const grid = document.getElementById('sub-dates-grid');
+    if (grid.children.length > 0) return; // already built
+    const tuesdays = getSeasonTuesdays();
+    grid.innerHTML = tuesdays.map(function(date, i) {
+      return '<label class="sub-date-item">' +
+        '<input type="checkbox" name="sub-date" value="' + date + '" id="sub-date-' + i + '">' +
+        '<span class="sub-date-label">' + date + '</span>' +
+        '</label>';
+    }).join('');
+  }
+
   // ── Sub toggle ──
   function setSub(val) {
     subNeeded = val;
     document.getElementById('sub-needed').value = val;
     document.getElementById('btn-needs-sub').className = val === 'Yes' ? 'sub-btn active-needs' : 'sub-btn';
     document.getElementById('btn-no-sub').className    = val === 'No'  ? 'sub-btn active-none'  : 'sub-btn';
+
+    const panel = document.getElementById('sub-dates-panel');
+    if (val === 'Yes') {
+      buildSubDates();
+      panel.classList.add('show');
+    } else {
+      panel.classList.remove('show');
+      // Clear all checkboxes when hiding
+      document.querySelectorAll('input[name="sub-date"]').forEach(function(cb) {
+        cb.checked = false;
+      });
+      document.getElementById('err-sub-dates').classList.remove('show');
+    }
+  }
+
+  // ── Get selected sub dates ──
+  function getSubDates() {
+    const checked = document.querySelectorAll('input[name="sub-date"]:checked');
+    return Array.from(checked).map(function(cb) { return cb.value; });
   }
 
   // ── Form submit ──
@@ -937,6 +1137,15 @@
       document.getElementById('err-email').classList.remove('show');
     }
 
+    // Validate sub dates if sub needed
+    const subDates = getSubDates();
+    if (subNeeded === 'Yes' && subDates.length === 0) {
+      document.getElementById('err-sub-dates').classList.add('show');
+      valid = false;
+    } else {
+      document.getElementById('err-sub-dates').classList.remove('show');
+    }
+
     if (!valid) return;
 
     // Show spinner
@@ -944,12 +1153,15 @@
     document.getElementById('submit-label').textContent = 'Submitting…';
     document.getElementById('submit-btn').disabled = true;
 
+    const subDatesStr = subDates.join(', ');
+
     const payload = {
       action:        'submit',
       name:          nameEl.value,
       email:         emailEl.value,
       participation: participation,
       subNeeded:     subNeeded,
+      subDates:      subDatesStr,
       timestamp:     new Date().toISOString(),
       adminEmail:    CONFIG.adminEmail,
     };
@@ -960,6 +1172,7 @@
       email:         payload.email,
       participation: payload.participation,
       subNeeded:     payload.subNeeded,
+      subDates:      payload.subDates,
       adminEmail:    payload.adminEmail,
     },
     function() {
@@ -980,9 +1193,12 @@
     const verb = data.participation === 'Yes' ? "you're registered!" :
                  data.participation === 'Maybe' ? "response received." : "you're marked as out.";
 
+    const subLine = (data.subNeeded === 'Yes' && data.subDates)
+      ? '\nSub needed: ' + data.subDates : '';
+
     document.getElementById('conf-headline').textContent = `${icon}  ${data.name} — ${verb}`;
     document.getElementById('conf-message').textContent  =
-      `A confirmation will be sent to ${data.email}.` +
+      `A confirmation will be sent to ${data.email}.${subLine}` +
       (offline ? ' (Note: connect the Apps Script URL to enable emails.)' : '');
 
     conf.classList.add('show');
