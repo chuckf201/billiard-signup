@@ -13,6 +13,7 @@
   v1.4  2026-03-20  Scrollable signed-up names strip
   v1.5  2026-03-21  Sub date checkboxes — Tuesday dates auto-generated
   v1.6  2026-03-22  Script: filter members by Paid=X or M only (col D)
+  v1.7  2026-03-27  Updated SCHEDULE_MAP thresholds: 1-9=3teams, 10-12=4teams, 13-15=5teams, 16+=6teams
 ─────────────────────────────────────────────────────────────
   DEPLOY CHECKLIST (each update)
   [ ] Set SCRIPT_URL on line ~700 to your Apps Script /exec URL
@@ -829,8 +830,10 @@
   //  CONFIGURATION — Edit these values each season
   // ═══════════════════════════════════════════════════════════════
   const CONFIG = {
-    // Google Apps Script Web App URL 3/22/2026
+    // Google Apps Script Web App URL
     SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec',
+    //2026-03-227 cmf
+    //SCRIPT_url: 'https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec',
 
     // ── Season start date (format: YYYY-MM-DD, must be a Tuesday) ──
     seasonStart: '2026-03-03',
@@ -849,11 +852,14 @@
 
   // ── Teams → Weeks mapping ──
   // Key = number of teams, Value = number of playing weeks
+  // ── Teams → Weeks mapping ──
+  // minPlayers = threshold where this scenario becomes Most Likely
+  // Based on upper bound: 3 teams@4=12, 4 teams@3=12→shift at 10, 5 teams@3=15, 6 teams@3=18
   const SCHEDULE_MAP = [
-    { teams: 3, weeks: 3, minPlayers: 6,  maxPlayers: 12 },
-    { teams: 4, weeks: 3, minPlayers: 13, maxPlayers: 16 },
-    { teams: 5, weeks: 5, minPlayers: 17, maxPlayers: 20 },
-    { teams: 6, weeks: 5, minPlayers: 21, maxPlayers: 24 },
+    { teams: 3, weeks: 3, minPlayers: 1,  maxPlayers: 9  },
+    { teams: 4, weeks: 3, minPlayers: 10, maxPlayers: 12 },
+    { teams: 5, weeks: 5, minPlayers: 13, maxPlayers: 15 },
+    { teams: 6, weeks: 5, minPlayers: 16, maxPlayers: 24 },
   ];
 
   // ── Calculate a Tuesday end date from start + N weeks + skipWeeks ──
