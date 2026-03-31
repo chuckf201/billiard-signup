@@ -14,6 +14,7 @@
   v1.5  2026-03-21  Sub date checkboxes — Tuesday dates auto-generated
   v1.6  2026-03-22  Script: filter members by Paid=X or M only (col D)
   v1.7  2026-03-27  Updated SCHEDULE_MAP thresholds: 1-9=3teams, 10-12=4teams, 13-15=5teams, 16+=6teams
+  v1.9  2026-03-31  Maybe: avail-sub only (no sub dates). emailMaybes() follow-up utility added
 ─────────────────────────────────────────────────────────────
   DEPLOY CHECKLIST (each update)
   [ ] Set SCRIPT_URL on line ~700 to your Apps Script /exec URL
@@ -789,6 +790,20 @@
         </div>
       </div>
 
+      <!-- AVAILABLE TO SUB — shown for Maybe and I'm Out players -->
+      <div class="field-group" id="avail-sub-section" style="display:none;">
+        <label class="field-label">Are you available to substitute for others?</label>
+        <div class="sub-group">
+          <button type="button" class="sub-btn" id="btn-avail-yes" onclick="setAvailSub('Yes')">
+            ✓ Yes, I Can Sub
+          </button>
+          <button type="button" class="sub-btn active-none" id="btn-avail-no" onclick="setAvailSub('No')">
+            No, Not Available
+          </button>
+        </div>
+        <input type="hidden" id="avail-sub" value="No">
+      </div>
+
       <!-- EMAIL -->
       <div class="field-group">
         <label class="field-label" for="member-email">Confirm Your Email</label>
@@ -831,9 +846,8 @@
   // ═══════════════════════════════════════════════════════════════
   const CONFIG = {
     // Google Apps Script Web App URL
+    //SCRIPT_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec',
     SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec',
-    //2026-03-227 cmf
-    //SCRIPT_url: 'https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec',
 
     // ── Season start date (format: YYYY-MM-DD, must be a Tuesday) ──
     seasonStart: '2026-03-03',
@@ -1042,25 +1056,49 @@
     participation = val;
     document.getElementById('participation').value = val;
 
-    const btnYes   = document.getElementById('btn-yes');
-    const btnMaybe = document.getElementById('btn-maybe');
-    const btnNo    = document.getElementById('btn-no');
-    const subSec   = document.getElementById('sub-section');
+    const btnYes      = document.getElementById('btn-yes');
+    const btnMaybe    = document.getElementById('btn-maybe');
+    const btnNo       = document.getElementById('btn-no');
+    const subSec      = document.getElementById('sub-section');
+    const availSubSec = document.getElementById('avail-sub-section');
 
     btnYes.className   = 'toggle-btn';
     btnMaybe.className = 'toggle-btn';
     btnNo.className    = 'toggle-btn';
 
     if (val === 'Yes') {
-      btnYes.className = 'toggle-btn active-yes';
-      subSec.style.display = 'block';
+      // YES — show sub dates section, hide avail-sub
+      btnYes.className          = 'toggle-btn active-yes';
+      subSec.style.display      = 'block';
+      availSubSec.style.display = 'none';
+      setAvailSub('No');
     } else if (val === 'Maybe') {
-      btnMaybe.className = 'toggle-btn active-maybe';
-      subSec.style.display = 'block';
+      // MAYBE — hide sub dates, show "available to sub" only
+      // Maybe players are potential subs, not team players needing subs
+      btnMaybe.className        = 'toggle-btn active-maybe';
+      subSec.style.display      = 'none';
+      availSubSec.style.display = 'block';
+      setSub('No');
+      document.querySelectorAll('input[name="sub-date"]').forEach(function(cb) { cb.checked = false; });
+      document.getElementById('sub-dates-panel').classList.remove('show');
     } else {
-      btnNo.className = 'toggle-btn active-no';
-      subSec.style.display = 'none';
+      // I'M OUT — hide sub dates, show "available to sub"
+      btnNo.className           = 'toggle-btn active-no';
+      subSec.style.display      = 'none';
+      availSubSec.style.display = 'block';
+      setSub('No');
+      document.querySelectorAll('input[name="sub-date"]').forEach(function(cb) { cb.checked = false; });
+      document.getElementById('sub-dates-panel').classList.remove('show');
     }
+  }
+
+  // ── Available to sub toggle (No/Maybe players only) ──
+  function setAvailSub(val) {
+    document.getElementById('avail-sub').value = val;
+    const btnYes = document.getElementById('btn-avail-yes');
+    const btnNo  = document.getElementById('btn-avail-no');
+    if (btnYes) btnYes.className = val === 'Yes' ? 'sub-btn active-needs' : 'sub-btn';
+    if (btnNo)  btnNo.className  = val === 'No'  ? 'sub-btn active-none'  : 'sub-btn';
   }
 
   // ── Generate Tuesday dates for the season ──
@@ -1160,6 +1198,7 @@
     document.getElementById('submit-btn').disabled = true;
 
     const subDatesStr = subDates.join(', ');
+    const availSub    = document.getElementById('avail-sub') ? document.getElementById('avail-sub').value : 'No';
 
     const payload = {
       action:        'submit',
@@ -1168,6 +1207,7 @@
       participation: participation,
       subNeeded:     subNeeded,
       subDates:      subDatesStr,
+      availSub:      availSub,
       timestamp:     new Date().toISOString(),
       adminEmail:    CONFIG.adminEmail,
     };
@@ -1179,6 +1219,7 @@
       participation: payload.participation,
       subNeeded:     payload.subNeeded,
       subDates:      payload.subDates,
+      availSub:      payload.availSub,
       adminEmail:    payload.adminEmail,
     },
     function() {
@@ -1197,14 +1238,16 @@
     const conf = document.getElementById('confirmation');
     const icon = data.participation === 'No' ? '✕' : '✓';
     const verb = data.participation === 'Yes' ? "you're registered!" :
-                 data.participation === 'Maybe' ? "response received." : "you're marked as out.";
+                 data.participation === 'Maybe' ? "response received — we'll follow up before the season starts." : "you're marked as out.";
 
     const subLine = (data.subNeeded === 'Yes' && data.subDates)
       ? '\nSub needed: ' + data.subDates : '';
+    const availLine = (data.participation !== 'Yes' && data.availSub === 'Yes')
+      ? '\nAvailable to sub for others: Yes' : '';
 
     document.getElementById('conf-headline').textContent = `${icon}  ${data.name} — ${verb}`;
     document.getElementById('conf-message').textContent  =
-      `A confirmation will be sent to ${data.email}.${subLine}` +
+      `A confirmation will be sent to ${data.email}.${subLine}${availLine}` +
       (offline ? ' (Note: connect the Apps Script URL to enable emails.)' : '');
 
     conf.classList.add('show');
