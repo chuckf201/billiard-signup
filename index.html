@@ -15,6 +15,7 @@
   v1.6  2026-03-22  Script: filter members by Paid=X or M only (col D)
   v1.7  2026-03-27  Updated SCHEDULE_MAP thresholds: 1-9=3teams, 10-12=4teams, 13-15=5teams, 16+=6teams
   v1.9  2026-03-31  Maybe: avail-sub only (no sub dates). emailMaybes() follow-up utility added
+  v1.10 2026-03-31  Fix: sub-section now correctly hidden on load for Maybe/No selections
 ─────────────────────────────────────────────────────────────
   DEPLOY CHECKLIST (each update)
   [ ] Set SCRIPT_URL on line ~700 to your Apps Script /exec URL
@@ -768,7 +769,7 @@
       </div>
 
       <!-- SUB TOGGLE (shown only when Yes or Maybe) -->
-      <div class="field-group" id="sub-section">
+      <div class="field-group" id="sub-section" style="display:block;">
         <label class="field-label">Do you need a substitute for any weeks?</label>
         <div class="sub-group">
           <button type="button" class="sub-btn" id="btn-needs-sub" onclick="setSub('Yes')">
@@ -846,7 +847,6 @@
   // ═══════════════════════════════════════════════════════════════
   const CONFIG = {
     // Google Apps Script Web App URL
-    //SCRIPT_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec',
     SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec',
 
     // ── Season start date (format: YYYY-MM-DD, must be a Tuesday) ──
@@ -1252,6 +1252,12 @@
 
     conf.classList.add('show');
   }
+
+  // ── Initialize form state ──
+  // Ensures sub-section and avail-sub-section are correctly shown/hidden
+  // on first load, back-navigation, or browser cache restore
+  setParticipation('Yes');
+
 </script>
 
 </body>
