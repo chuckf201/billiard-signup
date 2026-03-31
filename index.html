@@ -15,7 +15,8 @@
   v1.6  2026-03-22  Script: filter members by Paid=X or M only (col D)
   v1.7  2026-03-27  Updated SCHEDULE_MAP thresholds: 1-9=3teams, 10-12=4teams, 13-15=5teams, 16+=6teams
   v1.9  2026-03-31  Maybe: avail-sub only (no sub dates). emailMaybes() follow-up utility added
-  v1.10 2026-03-31  Fix: sub-section now correctly hidden on load for Maybe/No selections
+  v1.10 2026-03-31  Fix: sub-section correctly hidden on load for Maybe/No
+  v1.11 2026-03-31  Fix: form locks after submission — buttons/inputs disabled
 ─────────────────────────────────────────────────────────────
   DEPLOY CHECKLIST (each update)
   [ ] Set SCRIPT_URL on line ~700 to your Apps Script /exec URL
@@ -1251,6 +1252,20 @@
       (offline ? ' (Note: connect the Apps Script URL to enable emails.)' : '');
 
     conf.classList.add('show');
+
+    // ── Lock the form after submission ──
+    // Disable all toggle buttons, dropdowns, inputs and checkboxes
+    // so the member can see their response but cannot accidentally change it
+    document.querySelectorAll('.toggle-btn, .sub-btn').forEach(function(btn) {
+      btn.disabled = true;
+      btn.style.cursor = 'not-allowed';
+      btn.style.opacity = '0.6';
+    });
+    document.getElementById('member-name').disabled  = true;
+    document.getElementById('member-email').disabled = true;
+    document.querySelectorAll('input[name="sub-date"]').forEach(function(cb) {
+      cb.disabled = true;
+    });
   }
 
   // ── Initialize form state ──
