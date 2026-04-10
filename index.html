@@ -17,6 +17,9 @@
   v1.9  2026-03-31  Maybe: avail-sub only (no sub dates). emailMaybes() follow-up utility added
   v1.10 2026-03-31  Fix: sub-section correctly hidden on load for Maybe/No
   v1.11 2026-03-31  Fix: form locks after submission — buttons/inputs disabled
+  v1.12 2026-04-10  End-dates panel: two-row layout (Most Likely solo row 1,
+                    others row 2). Larger fonts, higher contrast — improved
+                    readability for all users. Start line opacity increased.
 ─────────────────────────────────────────────────────────────
   DEPLOY CHECKLIST (each update)
   [ ] Set SCRIPT_URL on line ~700 to your Apps Script /exec URL
@@ -128,10 +131,11 @@
     color: var(--gold);
   }
 
+  /* ── START DATE LINE ── */
   .season-dates {
     font-family: 'Crimson Pro', serif;
-    font-size: 13px;
-    color: rgba(245,240,232,0.65);
+    font-size: 16px;
+    color: rgba(245,240,232,0.92);
     letter-spacing: 0.5px;
     margin-bottom: 14px;
   }
@@ -159,66 +163,81 @@
 
   /* ── END DATES PANEL ── */
   .end-dates-panel {
+    margin: 10px 0 6px;
+  }
+
+  /* Row 1 — Most Likely chip, centered alone */
+  .end-dates-row-top {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+  /* Row 2 — remaining chips */
+  .end-dates-row-bottom {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 8px;
-    margin: 10px 0 4px;
+    gap: 10px;
   }
 
   .end-date-chip {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 6px 14px;
+    padding: 8px 18px;
     border-radius: 20px;
-    border: 1px solid rgba(201,168,76,0.25);
-    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(201,168,76,0.30);
+    background: rgba(0,0,0,0.22);
     transition: all 0.3s ease;
-    min-width: 110px;
+    min-width: 120px;
   }
 
   .end-date-chip.likely {
-    border-color: var(--gold);
-    background: rgba(201,168,76,0.18);
-    box-shadow: 0 0 12px rgba(201,168,76,0.25);
+    border: 2px solid var(--gold);
+    background: rgba(201,168,76,0.22);
+    box-shadow: 0 0 14px rgba(201,168,76,0.20);
+    min-width: 160px;
   }
 
   .end-date-chip.dimmed {
-    opacity: 0.38;
+    opacity: 0.55;
   }
 
+  /* Chip label (e.g. "3 Teams · 3 Wks") */
   .chip-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(245,240,232,0.5);
+    color: rgba(255,230,128,0.85);
     margin-bottom: 2px;
   }
 
   .end-date-chip.likely .chip-label {
-    color: var(--gold);
+    color: #FFE680;
   }
 
+  /* End date value */
   .chip-date {
     font-family: 'Crimson Pro', serif;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--cream);
+    font-size: 18px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.85);
   }
 
   .end-date-chip.likely .chip-date {
-    color: var(--gold-light);
+    color: #ffffff;
   }
 
+  /* "★ Most Likely" tag — only shown on likely chip */
   .chip-likely-tag {
     font-family: 'Oswald', sans-serif;
-    font-size: 8px;
+    font-size: 11px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
     color: var(--gold);
-    margin-top: 2px;
+    margin-top: 3px;
     display: none;
   }
 
@@ -290,18 +309,9 @@
     scrollbar-color: var(--gold-dim) transparent;
   }
 
-  .signed-scroll::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  .signed-scroll::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .signed-scroll::-webkit-scrollbar-thumb {
-    background: var(--gold-dim);
-    border-radius: 2px;
-  }
+  .signed-scroll::-webkit-scrollbar { width: 4px; }
+  .signed-scroll::-webkit-scrollbar-track { background: transparent; }
+  .signed-scroll::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
 
   .signed-names {
     display: flex;
@@ -326,20 +336,12 @@
     font-style: normal;
   }
 
-  .signed-name-chip:last-child::after {
-    content: '';
-    margin-left: 0;
-  }
+  .signed-name-chip:last-child::after { content: ''; margin-left: 0; }
 
   /* ── FORM BODY ── */
-  .form-body {
-    padding: 28px 28px 24px;
-  }
+  .form-body { padding: 28px 28px 24px; }
 
-  .welcome-text {
-    text-align: center;
-    margin-bottom: 26px;
-  }
+  .welcome-text { text-align: center; margin-bottom: 26px; }
 
   .welcome-text p:first-child {
     font-family: 'Crimson Pro', serif;
@@ -347,10 +349,7 @@
     color: var(--cream);
   }
 
-  .welcome-text .member-name {
-    color: var(--gold);
-    font-weight: 600;
-  }
+  .welcome-text .member-name { color: var(--gold); font-weight: 600; }
 
   .welcome-text p:last-child {
     font-size: 1rem;
@@ -359,9 +358,7 @@
   }
 
   /* ── FIELD GROUPS ── */
-  .field-group {
-    margin-bottom: 22px;
-  }
+  .field-group { margin-bottom: 22px; }
 
   .field-label {
     font-family: 'Oswald', sans-serif;
@@ -374,9 +371,7 @@
   }
 
   /* Dropdown */
-  .dropdown-wrap {
-    position: relative;
-  }
+  .dropdown-wrap { position: relative; }
 
   select {
     width: 100%;
@@ -393,15 +388,8 @@
     outline: none;
   }
 
-  select:focus {
-    border-color: var(--gold);
-    background: rgba(0,0,0,0.45);
-  }
-
-  select option {
-    background: var(--green-deep);
-    color: var(--cream);
-  }
+  select:focus { border-color: var(--gold); background: rgba(0,0,0,0.45); }
+  select option { background: var(--green-deep); color: var(--cream); }
 
   .dropdown-arrow {
     position: absolute;
@@ -441,29 +429,10 @@
   }
 
   .toggle-btn:last-child { border-right: none; }
-
-  .toggle-btn:hover {
-    background: rgba(255,255,255,0.07);
-    color: var(--cream);
-  }
-
-  .toggle-btn.active-yes {
-    background: var(--green-light);
-    color: var(--white);
-    font-weight: 600;
-  }
-
-  .toggle-btn.active-maybe {
-    background: rgba(201,168,76,0.25);
-    color: var(--gold-light);
-    font-weight: 600;
-  }
-
-  .toggle-btn.active-no {
-    background: var(--red-dark);
-    color: var(--white);
-    font-weight: 600;
-  }
+  .toggle-btn:hover { background: rgba(255,255,255,0.07); color: var(--cream); }
+  .toggle-btn.active-yes   { background: var(--green-light); color: var(--white); font-weight: 600; }
+  .toggle-btn.active-maybe { background: rgba(201,168,76,0.25); color: var(--gold-light); font-weight: 600; }
+  .toggle-btn.active-no    { background: var(--red-dark); color: var(--white); font-weight: 600; }
 
   /* Sub toggle (2 buttons) */
   .sub-group {
@@ -490,18 +459,8 @@
 
   .sub-btn:last-child { border-right: none; }
   .sub-btn:hover { background: rgba(255,255,255,0.07); color: var(--cream); }
-
-  .sub-btn.active-needs {
-    background: var(--gold-dim);
-    color: var(--white);
-    font-weight: 600;
-  }
-
-  .sub-btn.active-none {
-    background: var(--red-dark);
-    color: var(--white);
-    font-weight: 600;
-  }
+  .sub-btn.active-needs { background: var(--gold-dim); color: var(--white); font-weight: 600; }
+  .sub-btn.active-none  { background: var(--red-dark);  color: var(--white); font-weight: 600; }
 
   /* ── SUB DATES PANEL ── */
   .sub-dates-panel {
@@ -558,6 +517,7 @@
   }
 
   .sub-date-item:hover .sub-date-label { color: var(--gold-light); }
+
   .sub-dates-error {
     font-family: 'Oswald', sans-serif;
     font-size: 11px;
@@ -582,14 +542,8 @@
     transition: border-color 0.2s;
   }
 
-  input[type="email"]:focus {
-    border-color: var(--gold);
-    background: rgba(0,0,0,0.45);
-  }
-
-  input[type="email"]::placeholder {
-    color: rgba(245,240,232,0.35);
-  }
+  input[type="email"]:focus { border-color: var(--gold); background: rgba(0,0,0,0.45); }
+  input[type="email"]::placeholder { color: rgba(245,240,232,0.35); }
 
   /* ── SUBMIT BUTTON ── */
   .submit-btn {
@@ -646,7 +600,6 @@
     letter-spacing: 0.5px;
     display: none;
   }
-
   .error-msg.show { display: block; }
 
   /* ── FOOTER ── */
@@ -684,14 +637,18 @@
 
 <div class="card">
 
-  <!-- Corner diamonds via CSS -->
-
   <!-- HEADER -->
   <div class="header">
     <div class="club-name">Spruce Creek Golf &amp; Country Club</div>
     <h1 class="league-title">Men's <span>Tuesday</span> Billiard League</h1>
     <div class="season-dates" id="season-start-line">Loading…</div>
-    <div class="end-dates-panel" id="end-dates-panel"></div>
+
+    <!-- END DATES PANEL — two-row layout -->
+    <div class="end-dates-panel" id="end-dates-panel">
+      <div class="end-dates-row-top"  id="end-dates-row-top"></div>
+      <div class="end-dates-row-bottom" id="end-dates-row-bottom"></div>
+    </div>
+
     <div class="balls-row">
       <div class="ball b1"></div>
       <div class="ball b2"></div>
@@ -782,17 +739,15 @@
         </div>
         <input type="hidden" id="sub-needed" value="No">
 
-        <!-- SUB DATES PANEL — shown when Yes I Need a Sub is selected -->
+        <!-- SUB DATES PANEL -->
         <div class="sub-dates-panel" id="sub-dates-panel">
           <span class="sub-dates-title">Which Tuesday(s) do you need a sub?</span>
-          <div class="sub-dates-grid" id="sub-dates-grid">
-            <!-- Populated dynamically from season start date -->
-          </div>
+          <div class="sub-dates-grid" id="sub-dates-grid"></div>
           <div class="sub-dates-error" id="err-sub-dates">Please select at least one date.</div>
         </div>
       </div>
 
-      <!-- AVAILABLE TO SUB — shown for Maybe and I'm Out players -->
+      <!-- AVAILABLE TO SUB -->
       <div class="field-group" id="avail-sub-section" style="display:none;">
         <label class="field-label">Are you available to substitute for others?</label>
         <div class="sub-group">
@@ -847,29 +802,14 @@
   //  CONFIGURATION — Edit these values each season
   // ═══════════════════════════════════════════════════════════════
   const CONFIG = {
-    // Google Apps Script Web App URL
     SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec',
-
-    // ── Season start date (format: YYYY-MM-DD, must be a Tuesday) ──
     seasonStart: '2026-03-03',
-
-    // ── Skip weeks (holidays/breaks between start and end)
-    //    Set to 1 or 2 if there's a week off during the season
-    skipWeeks: 0,
-
-    // Total league slots
-    totalSlots: 24,
-
-    // Admin email
-    adminEmail: 'monrovian@gmail.com',
+    skipWeeks:   0,
+    totalSlots:  24,
+    adminEmail:  'monrovian@gmail.com',
   };
   // ═══════════════════════════════════════════════════════════════
 
-  // ── Teams → Weeks mapping ──
-  // Key = number of teams, Value = number of playing weeks
-  // ── Teams → Weeks mapping ──
-  // minPlayers = threshold where this scenario becomes Most Likely
-  // Based on upper bound: 3 teams@4=12, 4 teams@3=12→shift at 10, 5 teams@3=15, 6 teams@3=18
   const SCHEDULE_MAP = [
     { teams: 3, weeks: 3, minPlayers: 1,  maxPlayers: 9  },
     { teams: 4, weeks: 3, minPlayers: 10, maxPlayers: 12 },
@@ -877,23 +817,19 @@
     { teams: 6, weeks: 5, minPlayers: 16, maxPlayers: 24 },
   ];
 
-  // ── Calculate a Tuesday end date from start + N weeks + skipWeeks ──
   function calcEndDate(startDateStr, playWeeks, skipWeeks) {
     const start = new Date(startDateStr + 'T12:00:00');
-    const totalWeeks = playWeeks + skipWeeks;
-    const end = new Date(start);
-    end.setDate(start.getDate() + (totalWeeks - 1) * 7);
+    const end   = new Date(start);
+    end.setDate(start.getDate() + (playWeeks + skipWeeks - 1) * 7);
     return end;
   }
 
-  // ── Format date as MM-DD-YYYY ──
   function fmtDate(d) {
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
     return `${mm}-${dd}-${d.getFullYear()}`;
   }
 
-  // ── Determine most likely scenario from registered count ──
   function getLikelyScenario(registered) {
     let best = SCHEDULE_MAP[0];
     for (const s of SCHEDULE_MAP) {
@@ -902,42 +838,50 @@
     return best;
   }
 
-  // ── Render the end-dates panel ──
+  // ── Render the two-row end-dates panel ──
   function renderEndDates(registered) {
-    const panel    = document.getElementById('end-dates-panel');
-    const likely   = getLikelyScenario(registered);
-    const startStr = CONFIG.seasonStart;
+    const rowTop    = document.getElementById('end-dates-row-top');
+    const rowBottom = document.getElementById('end-dates-row-bottom');
+    const likely    = getLikelyScenario(registered);
+    const startStr  = CONFIG.seasonStart;
 
-    panel.innerHTML = SCHEDULE_MAP.map(s => {
+    rowTop.innerHTML    = '';
+    rowBottom.innerHTML = '';
+
+    SCHEDULE_MAP.forEach(function(s) {
       const endDate  = calcEndDate(startStr, s.weeks, CONFIG.skipWeeks);
       const isLikely = (s.teams === likely.teams);
-      const cls      = isLikely ? 'end-date-chip likely' : 'end-date-chip dimmed';
-      return `
-        <div class="${cls}">
-          <span class="chip-label">${s.teams} Teams · ${s.weeks} Wks</span>
-          <span class="chip-date">End: ${fmtDate(endDate)}</span>
-          <span class="chip-likely-tag">★ Most Likely</span>
-        </div>`;
-    }).join('');
+
+      const chip = document.createElement('div');
+      chip.className = 'end-date-chip' + (isLikely ? ' likely' : ' dimmed');
+      chip.innerHTML =
+        '<span class="chip-label">' + s.teams + ' Teams · ' + s.weeks + ' Wks</span>' +
+        '<span class="chip-date">End: ' + fmtDate(endDate) + '</span>' +
+        '<span class="chip-likely-tag">&#9733; Most Likely</span>';
+
+      if (isLikely) {
+        rowTop.appendChild(chip);
+      } else {
+        rowBottom.appendChild(chip);
+      }
+    });
   }
 
-  // ── Populate start date line ──
+  // Initial start-date line
   const startDisplay = new Date(CONFIG.seasonStart + 'T12:00:00');
   document.getElementById('season-start-line').textContent =
-    `Start: ${fmtDate(startDisplay)}  ·  Possible End Dates ↓`;
+    'Start: ' + fmtDate(startDisplay) + '  ·  Possible End Dates \u2193';
 
-  // Initial render with 0 registered (updates after stats load)
   renderEndDates(0);
 
-  // ── JSONP helper — injects a script tag, bypasses CORS completely ──
-  // Uses a timeout to detect failures since onerror is unreliable
+  // ── JSONP helper ──
   function apiFetch(action, params, onSuccess, onError) {
     const cbName  = '_cb_' + action.replace(/\W/g,'') + '_' + Date.now();
     const timeout = setTimeout(function() {
       cleanup();
       console.warn('apiFetch timeout for: ' + action);
       if (onError) onError();
-    }, 10000); // 10 second timeout
+    }, 10000);
 
     function cleanup() {
       clearTimeout(timeout);
@@ -946,26 +890,21 @@
       if (el) el.parentNode.removeChild(el);
     }
 
-    window[cbName] = function(data) {
-      cleanup();
-      onSuccess(data);
-    };
+    window[cbName] = function(data) { cleanup(); onSuccess(data); };
 
     const base   = CONFIG.SCRIPT_URL + '?action=' + encodeURIComponent(action);
     const extra  = params ? '&' + new URLSearchParams(params).toString() : '';
     const src    = base + extra + '&callback=' + cbName;
 
-    const script    = document.createElement('script');
-    script.id       = cbName;
-    script.src      = src;
-    script.onerror  = function() { cleanup(); if (onError) onError(); };
+    const script   = document.createElement('script');
+    script.id      = cbName;
+    script.src     = src;
+    script.onerror = function() { cleanup(); if (onError) onError(); };
     document.head.appendChild(script);
   }
 
-  // ── Email lookup map: fullName → email ──
   let memberEmailMap = {};
 
-  // ── Load live stats + season config from sheet ──
   function loadStats() {
     apiFetch('stats', null,
       function(data) {
@@ -973,6 +912,7 @@
         document.getElementById('stat-registered').textContent = reg;
         document.getElementById('stat-open').textContent       = Math.max(0, (data.totalSlots || CONFIG.totalSlots) - reg);
         document.getElementById('stat-declined').textContent   = data.declined ?? 0;
+
         const signedUpNames = data.signedUpNames || [];
         const namesEl = document.getElementById('signed-names');
         const countEl = document.getElementById('signed-count');
@@ -982,20 +922,18 @@
           countEl.textContent = '';
         } else {
           countEl.textContent = '(' + signedUpNames.length + ')';
-          namesEl.innerHTML = signedUpNames.map(function(name) {
-            return '<span class="signed-name-chip">' + name + '</span>';
+          namesEl.innerHTML = signedUpNames.map(function(n) {
+            return '<span class="signed-name-chip">' + n + '</span>';
           }).join('');
         }
 
-        // Apply season config from sheet if available
         if (data.seasonStart) CONFIG.seasonStart = data.seasonStart;
-        if (data.skipWeeks  !== undefined) CONFIG.skipWeeks  = data.skipWeeks;
-        if (data.totalSlots !== undefined) CONFIG.totalSlots = data.totalSlots;
+        if (data.skipWeeks   !== undefined) CONFIG.skipWeeks   = data.skipWeeks;
+        if (data.totalSlots  !== undefined) CONFIG.totalSlots  = data.totalSlots;
 
-        // Update start date display
-        const startDisplay = new Date(CONFIG.seasonStart + 'T12:00:00');
+        const sd = new Date(CONFIG.seasonStart + 'T12:00:00');
         document.getElementById('season-start-line').textContent =
-          'Start: ' + fmtDate(startDisplay) + '  ·  Possible End Dates ↓';
+          'Start: ' + fmtDate(sd) + '  ·  Possible End Dates \u2193';
 
         renderEndDates(reg);
       },
@@ -1007,7 +945,6 @@
     );
   }
 
-  // ── Load member list for dropdown ──
   function loadMembers() {
     apiFetch('members', null,
       function(data) {
@@ -1033,26 +970,16 @@
   loadStats();
   loadMembers();
 
-  // ── State ──
   let participation = 'Yes';
   let subNeeded     = 'No';
 
-  // ── Update welcome name + auto-fill email when dropdown changes ──
-  document.getElementById('member-name').addEventListener('change', function () {
+  document.getElementById('member-name').addEventListener('change', function() {
     const selected = this.value;
-    const first    = selected.split(' ')[0] || 'Member';
-    document.getElementById('welcome-name').textContent = first;
-
-    // Auto-fill email if found in Members tab
+    document.getElementById('welcome-name').textContent = selected.split(' ')[0] || 'Member';
     const emailEl = document.getElementById('member-email');
-    if (selected && memberEmailMap[selected]) {
-      emailEl.value = memberEmailMap[selected];
-    } else {
-      emailEl.value = '';
-    }
+    emailEl.value = (selected && memberEmailMap[selected]) ? memberEmailMap[selected] : '';
   });
 
-  // ── Participation toggle ──
   function setParticipation(val) {
     participation = val;
     document.getElementById('participation').value = val;
@@ -1068,14 +995,11 @@
     btnNo.className    = 'toggle-btn';
 
     if (val === 'Yes') {
-      // YES — show sub dates section, hide avail-sub
       btnYes.className          = 'toggle-btn active-yes';
       subSec.style.display      = 'block';
       availSubSec.style.display = 'none';
       setAvailSub('No');
     } else if (val === 'Maybe') {
-      // MAYBE — hide sub dates, show "available to sub" only
-      // Maybe players are potential subs, not team players needing subs
       btnMaybe.className        = 'toggle-btn active-maybe';
       subSec.style.display      = 'none';
       availSubSec.style.display = 'block';
@@ -1083,7 +1007,6 @@
       document.querySelectorAll('input[name="sub-date"]').forEach(function(cb) { cb.checked = false; });
       document.getElementById('sub-dates-panel').classList.remove('show');
     } else {
-      // I'M OUT — hide sub dates, show "available to sub"
       btnNo.className           = 'toggle-btn active-no';
       subSec.style.display      = 'none';
       availSubSec.style.display = 'block';
@@ -1093,22 +1016,18 @@
     }
   }
 
-  // ── Available to sub toggle (No/Maybe players only) ──
   function setAvailSub(val) {
     document.getElementById('avail-sub').value = val;
-    const btnYes = document.getElementById('btn-avail-yes');
-    const btnNo  = document.getElementById('btn-avail-no');
-    if (btnYes) btnYes.className = val === 'Yes' ? 'sub-btn active-needs' : 'sub-btn';
-    if (btnNo)  btnNo.className  = val === 'No'  ? 'sub-btn active-none'  : 'sub-btn';
+    const btnY = document.getElementById('btn-avail-yes');
+    const btnN = document.getElementById('btn-avail-no');
+    if (btnY) btnY.className = val === 'Yes' ? 'sub-btn active-needs' : 'sub-btn';
+    if (btnN) btnN.className = val === 'No'  ? 'sub-btn active-none'  : 'sub-btn';
   }
 
-  // ── Generate Tuesday dates for the season ──
   function getSeasonTuesdays() {
     const tuesdays = [];
     const start    = new Date(CONFIG.seasonStart + 'T12:00:00');
-    const likely   = getLikelyScenario(0); // use max weeks for full range
     const maxWeeks = SCHEDULE_MAP[SCHEDULE_MAP.length - 1].weeks + CONFIG.skipWeeks;
-
     for (let w = 0; w < maxWeeks; w++) {
       const d = new Date(start);
       d.setDate(start.getDate() + w * 7);
@@ -1117,12 +1036,10 @@
     return tuesdays;
   }
 
-  // ── Build the sub dates checkboxes ──
   function buildSubDates() {
     const grid = document.getElementById('sub-dates-grid');
-    if (grid.children.length > 0) return; // already built
-    const tuesdays = getSeasonTuesdays();
-    grid.innerHTML = tuesdays.map(function(date, i) {
+    if (grid.children.length > 0) return;
+    grid.innerHTML = getSeasonTuesdays().map(function(date, i) {
       return '<label class="sub-date-item">' +
         '<input type="checkbox" name="sub-date" value="' + date + '" id="sub-date-' + i + '">' +
         '<span class="sub-date-label">' + date + '</span>' +
@@ -1130,7 +1047,6 @@
     }).join('');
   }
 
-  // ── Sub toggle ──
   function setSub(val) {
     subNeeded = val;
     document.getElementById('sub-needed').value = val;
@@ -1143,63 +1059,50 @@
       panel.classList.add('show');
     } else {
       panel.classList.remove('show');
-      // Clear all checkboxes when hiding
-      document.querySelectorAll('input[name="sub-date"]').forEach(function(cb) {
-        cb.checked = false;
-      });
+      document.querySelectorAll('input[name="sub-date"]').forEach(function(cb) { cb.checked = false; });
       document.getElementById('err-sub-dates').classList.remove('show');
     }
   }
 
-  // ── Get selected sub dates ──
   function getSubDates() {
-    const checked = document.querySelectorAll('input[name="sub-date"]:checked');
-    return Array.from(checked).map(function(cb) { return cb.value; });
+    return Array.from(document.querySelectorAll('input[name="sub-date"]:checked'))
+                .map(function(cb) { return cb.value; });
   }
 
-  // ── Form submit ──
-  document.getElementById('signup-form').addEventListener('submit', function (e) {
+  document.getElementById('signup-form').addEventListener('submit', function(e) {
     e.preventDefault();
 
     const nameEl  = document.getElementById('member-name');
     const emailEl = document.getElementById('member-email');
     let valid = true;
 
-    // Validate name
     if (!nameEl.value) {
-      document.getElementById('err-name').classList.add('show');
-      valid = false;
+      document.getElementById('err-name').classList.add('show'); valid = false;
     } else {
       document.getElementById('err-name').classList.remove('show');
     }
 
-    // Validate email
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value);
     if (!emailOk) {
-      document.getElementById('err-email').classList.add('show');
-      valid = false;
+      document.getElementById('err-email').classList.add('show'); valid = false;
     } else {
       document.getElementById('err-email').classList.remove('show');
     }
 
-    // Validate sub dates if sub needed
     const subDates = getSubDates();
     if (subNeeded === 'Yes' && subDates.length === 0) {
-      document.getElementById('err-sub-dates').classList.add('show');
-      valid = false;
+      document.getElementById('err-sub-dates').classList.add('show'); valid = false;
     } else {
       document.getElementById('err-sub-dates').classList.remove('show');
     }
 
     if (!valid) return;
 
-    // Show spinner
-    document.getElementById('spinner').style.display = 'block';
+    document.getElementById('spinner').style.display    = 'block';
     document.getElementById('submit-label').textContent = 'Submitting…';
-    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('submit-btn').disabled      = true;
 
-    const subDatesStr = subDates.join(', ');
-    const availSub    = document.getElementById('avail-sub') ? document.getElementById('avail-sub').value : 'No';
+    const availSub = document.getElementById('avail-sub').value;
 
     const payload = {
       action:        'submit',
@@ -1207,13 +1110,12 @@
       email:         emailEl.value,
       participation: participation,
       subNeeded:     subNeeded,
-      subDates:      subDatesStr,
+      subDates:      subDates.join(', '),
       availSub:      availSub,
       timestamp:     new Date().toISOString(),
       adminEmail:    CONFIG.adminEmail,
     };
 
-    // Submit via apiFetch
     apiFetch('submit', {
       name:          payload.name,
       email:         payload.email,
@@ -1232,45 +1134,37 @@
     });
   });
 
-  function showConfirmation(data, offline = false) {
-    document.getElementById('spinner').style.display = 'none';
+  function showConfirmation(data, offline) {
+    offline = offline || false;
+    document.getElementById('spinner').style.display    = 'none';
     document.getElementById('submit-label').textContent = 'Response Submitted';
 
     const conf = document.getElementById('confirmation');
+    const verb = data.participation === 'Yes'   ? "you're registered!" :
+                 data.participation === 'Maybe'  ? "response received — we'll follow up before the season starts." :
+                                                   "you're marked as out.";
     const icon = data.participation === 'No' ? '✕' : '✓';
-    const verb = data.participation === 'Yes' ? "you're registered!" :
-                 data.participation === 'Maybe' ? "response received — we'll follow up before the season starts." : "you're marked as out.";
 
-    const subLine = (data.subNeeded === 'Yes' && data.subDates)
-      ? '\nSub needed: ' + data.subDates : '';
-    const availLine = (data.participation !== 'Yes' && data.availSub === 'Yes')
-      ? '\nAvailable to sub for others: Yes' : '';
+    const subLine   = (data.subNeeded === 'Yes' && data.subDates) ? '\nSub needed: ' + data.subDates : '';
+    const availLine = (data.participation !== 'Yes' && data.availSub === 'Yes') ? '\nAvailable to sub for others: Yes' : '';
 
-    document.getElementById('conf-headline').textContent = `${icon}  ${data.name} — ${verb}`;
+    document.getElementById('conf-headline').textContent = icon + '  ' + data.name + ' — ' + verb;
     document.getElementById('conf-message').textContent  =
-      `A confirmation will be sent to ${data.email}.${subLine}${availLine}` +
+      'A confirmation will be sent to ' + data.email + '.' + subLine + availLine +
       (offline ? ' (Note: connect the Apps Script URL to enable emails.)' : '');
 
     conf.classList.add('show');
 
-    // ── Lock the form after submission ──
-    // Disable all toggle buttons, dropdowns, inputs and checkboxes
-    // so the member can see their response but cannot accidentally change it
     document.querySelectorAll('.toggle-btn, .sub-btn').forEach(function(btn) {
-      btn.disabled = true;
-      btn.style.cursor = 'not-allowed';
+      btn.disabled      = true;
+      btn.style.cursor  = 'not-allowed';
       btn.style.opacity = '0.6';
     });
     document.getElementById('member-name').disabled  = true;
     document.getElementById('member-email').disabled = true;
-    document.querySelectorAll('input[name="sub-date"]').forEach(function(cb) {
-      cb.disabled = true;
-    });
+    document.querySelectorAll('input[name="sub-date"]').forEach(function(cb) { cb.disabled = true; });
   }
 
-  // ── Initialize form state ──
-  // Ensures sub-section and avail-sub-section are correctly shown/hidden
-  // on first load, back-navigation, or browser cache restore
   setParticipation('Yes');
 
 </script>
