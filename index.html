@@ -21,6 +21,10 @@
   v1.13 2026-04-11  End-dates panel: larger fonts, better contrast, two-row layout,
                     dynamic chip hiding (eliminated scenarios hidden automatically),
                     mobile 2×2 grid for screens under 500px
+  v1.14 2026-08-06  Low-vision pass: bumped nearly every font-size site-wide (labels,
+                    buttons, inputs, stats, chips), raised low-opacity text to readable
+                    contrast, enlarged tap targets (buttons/inputs/checkboxes) and
+                    added base line-height for 80+ age-group readability.
 ─────────────────────────────────────────────────────────────
   DEPLOY CHECKLIST (each update)
   [ ] Set SCRIPT_URL on line ~700 to your Apps Script /exec URL
@@ -74,6 +78,7 @@
     justify-content: center;
     padding: 30px 16px 50px;
     font-family: 'Crimson Pro', Georgia, serif;
+    line-height: 1.55;
   }
 
   .card {
@@ -111,9 +116,9 @@
 
   .club-name {
     font-family: 'Oswald', sans-serif;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 500;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     color: var(--gold);
     text-transform: uppercase;
     margin-bottom: 6px;
@@ -121,7 +126,7 @@
 
   .league-title {
     font-family: 'Playfair Display', serif;
-    font-size: 2rem;
+    font-size: 2.6rem;
     font-weight: 900;
     color: var(--white);
     line-height: 1.1;
@@ -134,7 +139,7 @@
 
   .season-dates {
     font-family: 'Crimson Pro', serif;
-    font-size: 16px;
+    font-size: 19px;
     color: rgba(245,240,232,0.92);
     letter-spacing: 0.5px;
     margin-bottom: 14px;
@@ -190,19 +195,19 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 6px 18px;
+    padding: 10px 20px;
     border-radius: 20px;
     border: 1px solid rgba(201,168,76,0.25);
     background: rgba(0,0,0,0.2);
     transition: all 0.3s ease;
-    min-width: 120px;
+    min-width: 135px;
   }
 
   .end-date-chip.likely {
     border: 2px solid var(--gold);
     background: rgba(201,168,76,0.18);
     box-shadow: 0 0 12px rgba(201,168,76,0.25);
-    min-width: 160px;
+    min-width: 190px;
   }
 
   .end-date-chip.dimmed {
@@ -211,8 +216,8 @@
 
   .chip-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    letter-spacing: 2px;
+    font-size: 14px;
+    letter-spacing: 1px;
     text-transform: uppercase;
     color: #FFE680;
     margin-bottom: 2px;
@@ -224,7 +229,7 @@
 
   .chip-date {
     font-family: 'Crimson Pro', serif;
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 600;
     color: rgba(245,240,232,0.92);
   }
@@ -235,8 +240,8 @@
 
   .chip-likely-tag {
     font-family: 'Oswald', sans-serif;
-    font-size: 11px;
-    letter-spacing: 1.5px;
+    font-size: 13px;
+    letter-spacing: 1px;
     text-transform: uppercase;
     color: var(--gold);
     margin-top: 2px;
@@ -269,7 +274,7 @@
   }
 
   .stat {
-    padding: 14px 10px;
+    padding: 18px 8px;
     text-align: center;
     border-right: 1px solid rgba(201,168,76,0.2);
   }
@@ -277,7 +282,7 @@
 
   .stat-num {
     font-family: 'Playfair Display', serif;
-    font-size: 1.7rem;
+    font-size: 2.3rem;
     font-weight: 700;
     color: var(--gold);
     line-height: 1;
@@ -286,16 +291,16 @@
 
   .stat-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: rgba(245,240,232,0.5);
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: rgba(245,240,232,0.78);
     text-transform: uppercase;
     margin-top: 3px;
     display: block;
   }
 
   .stat-icon {
-    font-size: 10px;
+    font-size: 14px;
     display: block;
     color: var(--gold-dim);
     margin-bottom: 2px;
@@ -305,14 +310,14 @@
   .signed-strip {
     background: rgba(0,0,0,0.2);
     border-bottom: 1px solid rgba(201,168,76,0.15);
-    padding: 10px 20px;
+    padding: 12px 20px;
   }
 
   .signed-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: rgba(245,240,232,0.45);
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: rgba(245,240,232,0.7);
     text-transform: uppercase;
     display: block;
     margin-bottom: 6px;
@@ -347,7 +352,7 @@
 
   .signed-name-chip {
     font-family: 'Crimson Pro', serif;
-    font-size: 13px;
+    font-size: 16px;
     color: var(--gold-light);
     font-style: italic;
     white-space: nowrap;
@@ -378,7 +383,7 @@
 
   .welcome-text p:first-child {
     font-family: 'Crimson Pro', serif;
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     color: var(--cream);
   }
 
@@ -388,8 +393,8 @@
   }
 
   .welcome-text p:last-child {
-    font-size: 1rem;
-    color: rgba(245,240,232,0.65);
+    font-size: 1.2rem;
+    color: rgba(245,240,232,0.8);
     margin-top: 4px;
   }
 
@@ -400,11 +405,11 @@
 
   .field-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 10px;
-    letter-spacing: 2.5px;
+    font-size: 14px;
+    letter-spacing: 1.5px;
     color: var(--gold);
     text-transform: uppercase;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     display: block;
   }
 
@@ -415,13 +420,13 @@
 
   select {
     width: 100%;
-    padding: 13px 40px 13px 16px;
+    padding: 18px 44px 18px 18px;
     background: rgba(0,0,0,0.3);
     border: 1px solid rgba(201,168,76,0.35);
     border-radius: var(--radius);
     color: var(--cream);
     font-family: 'Crimson Pro', serif;
-    font-size: 1.05rem;
+    font-size: 1.3rem;
     appearance: none;
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
@@ -440,11 +445,11 @@
 
   .dropdown-arrow {
     position: absolute;
-    right: 14px;
+    right: 16px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--gold);
-    font-size: 12px;
+    font-size: 15px;
     pointer-events: none;
   }
 
@@ -458,14 +463,14 @@
   }
 
   .toggle-btn {
-    padding: 13px 8px;
+    padding: 18px 8px;
     background: rgba(0,0,0,0.25);
     border: none;
     border-right: 1px solid rgba(201,168,76,0.2);
-    color: rgba(245,240,232,0.5);
+    color: rgba(245,240,232,0.62);
     font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    letter-spacing: 1px;
+    font-size: 16px;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
@@ -510,14 +515,14 @@
   }
 
   .sub-btn {
-    padding: 13px 8px;
+    padding: 18px 8px;
     background: rgba(0,0,0,0.25);
     border: none;
     border-right: 1px solid rgba(201,168,76,0.2);
-    color: rgba(245,240,232,0.5);
+    color: rgba(245,240,232,0.62);
     font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    letter-spacing: 1px;
+    font-size: 16px;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
@@ -555,8 +560,8 @@
 
   .sub-dates-title {
     font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    letter-spacing: 2px;
+    font-size: 13px;
+    letter-spacing: 1px;
     color: var(--gold);
     text-transform: uppercase;
     margin-bottom: 10px;
@@ -577,8 +582,8 @@
   }
 
   .sub-date-item input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
+    width: 22px;
+    height: 22px;
     accent-color: var(--gold);
     cursor: pointer;
     flex-shrink: 0;
@@ -586,7 +591,7 @@
 
   .sub-date-label {
     font-family: 'Crimson Pro', serif;
-    font-size: 14px;
+    font-size: 17px;
     color: var(--cream);
     cursor: pointer;
     user-select: none;
@@ -595,7 +600,7 @@
   .sub-date-item:hover .sub-date-label { color: var(--gold-light); }
   .sub-dates-error {
     font-family: 'Oswald', sans-serif;
-    font-size: 11px;
+    font-size: 14px;
     color: #e74c3c;
     letter-spacing: 0.5px;
     margin-top: 8px;
@@ -606,13 +611,13 @@
   /* Email input */
   input[type="email"] {
     width: 100%;
-    padding: 13px 16px;
+    padding: 18px 18px;
     background: rgba(0,0,0,0.3);
     border: 1px solid rgba(201,168,76,0.35);
     border-radius: var(--radius);
     color: var(--cream);
     font-family: 'Crimson Pro', serif;
-    font-size: 1.05rem;
+    font-size: 1.3rem;
     outline: none;
     transition: border-color 0.2s;
   }
@@ -629,15 +634,15 @@
   /* ── SUBMIT BUTTON ── */
   .submit-btn {
     width: 100%;
-    padding: 16px;
+    padding: 22px;
     background: linear-gradient(135deg, var(--gold-dim) 0%, var(--gold) 100%);
     border: none;
     border-radius: var(--radius);
     color: var(--green-deep);
     font-family: 'Oswald', sans-serif;
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 600;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     cursor: pointer;
     margin-top: 8px;
@@ -655,11 +660,11 @@
     background: rgba(42,138,74,0.2);
     border: 1px solid rgba(42,138,74,0.5);
     border-radius: var(--radius);
-    padding: 16px 20px;
+    padding: 20px 24px;
     margin-top: 16px;
     text-align: center;
     color: var(--cream);
-    font-size: 1rem;
+    font-size: 1.2rem;
     line-height: 1.6;
   }
 
@@ -668,14 +673,14 @@
   .confirmation strong {
     color: var(--gold-light);
     display: block;
-    margin-bottom: 4px;
-    font-size: 1.05rem;
+    margin-bottom: 6px;
+    font-size: 1.35rem;
   }
 
   /* ── ERROR ── */
   .error-msg {
     color: #e74c3c;
-    font-size: 12px;
+    font-size: 14px;
     margin-top: 6px;
     font-family: 'Oswald', sans-serif;
     letter-spacing: 0.5px;
@@ -690,9 +695,9 @@
     padding: 14px 24px;
     text-align: center;
     font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: rgba(245,240,232,0.3);
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: rgba(245,240,232,0.55);
     text-transform: uppercase;
   }
 
