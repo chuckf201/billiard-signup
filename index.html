@@ -24,7 +24,14 @@
   v1.14 2026-08-06  Low-vision pass: bumped nearly every font-size site-wide (labels,
                     buttons, inputs, stats, chips), raised low-opacity text to readable
                     contrast, enlarged tap targets (buttons/inputs/checkboxes) and
-                    added base line-height for 80+ age-group readability.
+                    added base line-height for 80+ age-group readability. [SUPERSEDED]
+  v1.15 2026-08-06  Header/body size pass round 2 — pushed headline, season line, stat
+                    numbers, buttons, and inputs larger site-wide. [SUPERSEDED]
+  v1.16 2026-08-06  Reverted v1.14/v1.15 — form was never meant to change site-wide.
+                    Restored all original sizes/spacing. Only the "Start: ... Possible
+                    End Dates" line (.season-dates) is now noticeably larger — 16px to
+                    32px, weight 600 — since that's the one line that needed to stand
+                    out.
 ─────────────────────────────────────────────────────────────
   DEPLOY CHECKLIST (each update)
   [ ] Set SCRIPT_URL on line ~700 to your Apps Script /exec URL
@@ -78,7 +85,6 @@
     justify-content: center;
     padding: 30px 16px 50px;
     font-family: 'Crimson Pro', Georgia, serif;
-    line-height: 1.55;
   }
 
   .card {
@@ -116,9 +122,9 @@
 
   .club-name {
     font-family: 'Oswald', sans-serif;
-    font-size: 14px;
+    font-size: 11px;
     font-weight: 500;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     color: var(--gold);
     text-transform: uppercase;
     margin-bottom: 6px;
@@ -126,7 +132,7 @@
 
   .league-title {
     font-family: 'Playfair Display', serif;
-    font-size: 2.6rem;
+    font-size: 2rem;
     font-weight: 900;
     color: var(--white);
     line-height: 1.1;
@@ -139,10 +145,11 @@
 
   .season-dates {
     font-family: 'Crimson Pro', serif;
-    font-size: 19px;
-    color: rgba(245,240,232,0.92);
-    letter-spacing: 0.5px;
-    margin-bottom: 14px;
+    font-size: 32px;
+    font-weight: 600;
+    color: rgba(245,240,232,0.97);
+    letter-spacing: 0.3px;
+    margin-bottom: 16px;
   }
 
   .balls-row {
@@ -195,19 +202,19 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 10px 20px;
+    padding: 6px 18px;
     border-radius: 20px;
     border: 1px solid rgba(201,168,76,0.25);
     background: rgba(0,0,0,0.2);
     transition: all 0.3s ease;
-    min-width: 135px;
+    min-width: 120px;
   }
 
   .end-date-chip.likely {
     border: 2px solid var(--gold);
     background: rgba(201,168,76,0.18);
     box-shadow: 0 0 12px rgba(201,168,76,0.25);
-    min-width: 190px;
+    min-width: 160px;
   }
 
   .end-date-chip.dimmed {
@@ -216,8 +223,8 @@
 
   .chip-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 14px;
-    letter-spacing: 1px;
+    font-size: 12px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     color: #FFE680;
     margin-bottom: 2px;
@@ -229,7 +236,7 @@
 
   .chip-date {
     font-family: 'Crimson Pro', serif;
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 600;
     color: rgba(245,240,232,0.92);
   }
@@ -240,8 +247,8 @@
 
   .chip-likely-tag {
     font-family: 'Oswald', sans-serif;
-    font-size: 13px;
-    letter-spacing: 1px;
+    font-size: 11px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
     color: var(--gold);
     margin-top: 2px;
@@ -274,7 +281,7 @@
   }
 
   .stat {
-    padding: 18px 8px;
+    padding: 14px 10px;
     text-align: center;
     border-right: 1px solid rgba(201,168,76,0.2);
   }
@@ -282,7 +289,7 @@
 
   .stat-num {
     font-family: 'Playfair Display', serif;
-    font-size: 2.3rem;
+    font-size: 1.7rem;
     font-weight: 700;
     color: var(--gold);
     line-height: 1;
@@ -291,16 +298,16 @@
 
   .stat-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    letter-spacing: 1px;
-    color: rgba(245,240,232,0.78);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(245,240,232,0.5);
     text-transform: uppercase;
     margin-top: 3px;
     display: block;
   }
 
   .stat-icon {
-    font-size: 14px;
+    font-size: 10px;
     display: block;
     color: var(--gold-dim);
     margin-bottom: 2px;
@@ -310,14 +317,14 @@
   .signed-strip {
     background: rgba(0,0,0,0.2);
     border-bottom: 1px solid rgba(201,168,76,0.15);
-    padding: 12px 20px;
+    padding: 10px 20px;
   }
 
   .signed-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    letter-spacing: 1px;
-    color: rgba(245,240,232,0.7);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(245,240,232,0.45);
     text-transform: uppercase;
     display: block;
     margin-bottom: 6px;
@@ -352,7 +359,7 @@
 
   .signed-name-chip {
     font-family: 'Crimson Pro', serif;
-    font-size: 16px;
+    font-size: 13px;
     color: var(--gold-light);
     font-style: italic;
     white-space: nowrap;
@@ -383,7 +390,7 @@
 
   .welcome-text p:first-child {
     font-family: 'Crimson Pro', serif;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     color: var(--cream);
   }
 
@@ -393,8 +400,8 @@
   }
 
   .welcome-text p:last-child {
-    font-size: 1.2rem;
-    color: rgba(245,240,232,0.8);
+    font-size: 1rem;
+    color: rgba(245,240,232,0.65);
     margin-top: 4px;
   }
 
@@ -405,11 +412,11 @@
 
   .field-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 14px;
-    letter-spacing: 1.5px;
+    font-size: 10px;
+    letter-spacing: 2.5px;
     color: var(--gold);
     text-transform: uppercase;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     display: block;
   }
 
@@ -420,13 +427,13 @@
 
   select {
     width: 100%;
-    padding: 18px 44px 18px 18px;
+    padding: 13px 40px 13px 16px;
     background: rgba(0,0,0,0.3);
     border: 1px solid rgba(201,168,76,0.35);
     border-radius: var(--radius);
     color: var(--cream);
     font-family: 'Crimson Pro', serif;
-    font-size: 1.3rem;
+    font-size: 1.05rem;
     appearance: none;
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
@@ -445,11 +452,11 @@
 
   .dropdown-arrow {
     position: absolute;
-    right: 16px;
+    right: 14px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--gold);
-    font-size: 15px;
+    font-size: 12px;
     pointer-events: none;
   }
 
@@ -463,14 +470,14 @@
   }
 
   .toggle-btn {
-    padding: 18px 8px;
+    padding: 13px 8px;
     background: rgba(0,0,0,0.25);
     border: none;
     border-right: 1px solid rgba(201,168,76,0.2);
-    color: rgba(245,240,232,0.62);
+    color: rgba(245,240,232,0.5);
     font-family: 'Oswald', sans-serif;
-    font-size: 16px;
-    letter-spacing: 0.5px;
+    font-size: 12px;
+    letter-spacing: 1px;
     text-transform: uppercase;
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
@@ -515,14 +522,14 @@
   }
 
   .sub-btn {
-    padding: 18px 8px;
+    padding: 13px 8px;
     background: rgba(0,0,0,0.25);
     border: none;
     border-right: 1px solid rgba(201,168,76,0.2);
-    color: rgba(245,240,232,0.62);
+    color: rgba(245,240,232,0.5);
     font-family: 'Oswald', sans-serif;
-    font-size: 16px;
-    letter-spacing: 0.5px;
+    font-size: 12px;
+    letter-spacing: 1px;
     text-transform: uppercase;
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
@@ -560,8 +567,8 @@
 
   .sub-dates-title {
     font-family: 'Oswald', sans-serif;
-    font-size: 13px;
-    letter-spacing: 1px;
+    font-size: 9px;
+    letter-spacing: 2px;
     color: var(--gold);
     text-transform: uppercase;
     margin-bottom: 10px;
@@ -582,8 +589,8 @@
   }
 
   .sub-date-item input[type="checkbox"] {
-    width: 22px;
-    height: 22px;
+    width: 16px;
+    height: 16px;
     accent-color: var(--gold);
     cursor: pointer;
     flex-shrink: 0;
@@ -591,7 +598,7 @@
 
   .sub-date-label {
     font-family: 'Crimson Pro', serif;
-    font-size: 17px;
+    font-size: 14px;
     color: var(--cream);
     cursor: pointer;
     user-select: none;
@@ -600,7 +607,7 @@
   .sub-date-item:hover .sub-date-label { color: var(--gold-light); }
   .sub-dates-error {
     font-family: 'Oswald', sans-serif;
-    font-size: 14px;
+    font-size: 11px;
     color: #e74c3c;
     letter-spacing: 0.5px;
     margin-top: 8px;
@@ -611,13 +618,13 @@
   /* Email input */
   input[type="email"] {
     width: 100%;
-    padding: 18px 18px;
+    padding: 13px 16px;
     background: rgba(0,0,0,0.3);
     border: 1px solid rgba(201,168,76,0.35);
     border-radius: var(--radius);
     color: var(--cream);
     font-family: 'Crimson Pro', serif;
-    font-size: 1.3rem;
+    font-size: 1.05rem;
     outline: none;
     transition: border-color 0.2s;
   }
@@ -634,15 +641,15 @@
   /* ── SUBMIT BUTTON ── */
   .submit-btn {
     width: 100%;
-    padding: 22px;
+    padding: 16px;
     background: linear-gradient(135deg, var(--gold-dim) 0%, var(--gold) 100%);
     border: none;
     border-radius: var(--radius);
     color: var(--green-deep);
     font-family: 'Oswald', sans-serif;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 600;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     text-transform: uppercase;
     cursor: pointer;
     margin-top: 8px;
@@ -660,11 +667,11 @@
     background: rgba(42,138,74,0.2);
     border: 1px solid rgba(42,138,74,0.5);
     border-radius: var(--radius);
-    padding: 20px 24px;
+    padding: 16px 20px;
     margin-top: 16px;
     text-align: center;
     color: var(--cream);
-    font-size: 1.2rem;
+    font-size: 1rem;
     line-height: 1.6;
   }
 
@@ -673,14 +680,14 @@
   .confirmation strong {
     color: var(--gold-light);
     display: block;
-    margin-bottom: 6px;
-    font-size: 1.35rem;
+    margin-bottom: 4px;
+    font-size: 1.05rem;
   }
 
   /* ── ERROR ── */
   .error-msg {
     color: #e74c3c;
-    font-size: 14px;
+    font-size: 12px;
     margin-top: 6px;
     font-family: 'Oswald', sans-serif;
     letter-spacing: 0.5px;
@@ -695,9 +702,9 @@
     padding: 14px 24px;
     text-align: center;
     font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    letter-spacing: 1px;
-    color: rgba(245,240,232,0.55);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(245,240,232,0.3);
     text-transform: uppercase;
   }
 
