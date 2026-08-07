@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <!--
 ═══════════════════════════════════════════════════════════════
-  SCGCC Tuesday Men's Billiard League — Signup Form  
+  SCGCC Tuesday Men's Billiard League — Signup Form
   File:     billiards_signup.html (deployed as index.html)
-  Host:     https://chuckf201.github.io/billiard-signup  
+  Host:     https://chuckf201.github.io/billiard-signup
 ─────────────────────────────────────────────────────────────
   VERSION HISTORY
   v1.0  2026-03-16  Initial working form — JSONP, Sheet logging, emails
@@ -32,6 +32,11 @@
                     End Dates" line (.season-dates) is now noticeably larger — 16px to
                     32px, weight 600 — since that's the one line that needed to stand
                     out.
+  v1.17 2026-08-06  Tightened the stats bar / signed-up strip / welcome-text block —
+                    too much vertical whitespace. Reduced stat cell padding, stat
+                    number size (1.7rem→1.4rem), signed-up strip padding, welcome-text
+                    spacing/size, and top padding above the form. Net effect: same
+                    content, noticeably more compact.
 ─────────────────────────────────────────────────────────────
   DEPLOY CHECKLIST (each update)
   [ ] Set SCRIPT_URL on line ~700 to your Apps Script /exec URL
@@ -281,7 +286,7 @@
   }
 
   .stat {
-    padding: 14px 10px;
+    padding: 9px 10px;
     text-align: center;
     border-right: 1px solid rgba(201,168,76,0.2);
   }
@@ -289,7 +294,7 @@
 
   .stat-num {
     font-family: 'Playfair Display', serif;
-    font-size: 1.7rem;
+    font-size: 1.4rem;
     font-weight: 700;
     color: var(--gold);
     line-height: 1;
@@ -298,26 +303,26 @@
 
   .stat-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    letter-spacing: 2px;
+    font-size: 8px;
+    letter-spacing: 1.5px;
     color: rgba(245,240,232,0.5);
     text-transform: uppercase;
-    margin-top: 3px;
+    margin-top: 1px;
     display: block;
   }
 
   .stat-icon {
-    font-size: 10px;
+    font-size: 9px;
     display: block;
     color: var(--gold-dim);
-    margin-bottom: 2px;
+    margin-bottom: 0px;
   }
 
   /* ── SIGNED UP STRIP ── */
   .signed-strip {
     background: rgba(0,0,0,0.2);
     border-bottom: 1px solid rgba(201,168,76,0.15);
-    padding: 10px 20px;
+    padding: 7px 20px;
   }
 
   .signed-label {
@@ -327,7 +332,7 @@
     color: rgba(245,240,232,0.45);
     text-transform: uppercase;
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 3px;
   }
 
   .signed-scroll {
@@ -359,7 +364,7 @@
 
   .signed-name-chip {
     font-family: 'Crimson Pro', serif;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--gold-light);
     font-style: italic;
     white-space: nowrap;
@@ -380,17 +385,17 @@
 
   /* ── FORM BODY ── */
   .form-body {
-    padding: 28px 28px 24px;
+    padding: 16px 28px 24px;
   }
 
   .welcome-text {
     text-align: center;
-    margin-bottom: 26px;
+    margin-bottom: 14px;
   }
 
   .welcome-text p:first-child {
     font-family: 'Crimson Pro', serif;
-    font-size: 1.2rem;
+    font-size: 1.05rem;
     color: var(--cream);
   }
 
@@ -400,9 +405,9 @@
   }
 
   .welcome-text p:last-child {
-    font-size: 1rem;
+    font-size: 0.85rem;
     color: rgba(245,240,232,0.65);
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   /* ── FIELD GROUPS ── */
