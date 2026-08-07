@@ -37,6 +37,8 @@
                     number size (1.7rem→1.4rem), signed-up strip padding, welcome-text
                     spacing/size, and top padding above the form. Net effect: same
                     content, noticeably more compact.
+  v1.18 2026-08-06  .stat-icon (✓ ○ ✕ above Registered/Open Slots/Declined) set to
+                    font-weight: 700 — same 9px size, bolder stroke weight.
 ─────────────────────────────────────────────────────────────
   DEPLOY CHECKLIST (each update)
   [ ] Set SCRIPT_URL on line ~700 to your Apps Script /exec URL
@@ -313,6 +315,7 @@
 
   .stat-icon {
     font-size: 9px;
+    font-weight: 700;
     display: block;
     color: var(--gold-dim);
     margin-bottom: 0px;
