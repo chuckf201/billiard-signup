@@ -38,7 +38,17 @@
                     spacing/size, and top padding above the form. Net effect: same
                     content, noticeably more compact.
   v1.18 2026-08-06  .stat-icon (✓ ○ ✕ above Registered/Open Slots/Declined) set to
-                    font-weight: 700 — same 9px size, bolder stroke weight.
+                    font-weight: 700 — same 9px size, bolder stroke weight. [DIDN'T
+                    RENDER — see v1.19]
+  v1.19 2026-08-07  Root cause of v1.18 not showing: .stat-icon inherited the body's
+                    Crimson Pro / Georgia serif font stack, which likely lacks glyphs
+                    for ✓ ○ ✕ — so the browser silently substitutes a fallback symbol
+                    font that ignores font-weight entirely. Fixed by (a) explicitly
+                    setting font-family: Arial/Helvetica/sans-serif, which reliably
+                    has bold variants for these characters, and (b) adding a 4-direction
+                    text-shadow "faux bold" as a belt-and-suspenders fallback so the
+                    thickening shows even on fonts/browsers that ignore font-weight
+                    for symbol glyphs. Same 9px size, same color.
 ─────────────────────────────────────────────────────────────
   DEPLOY CHECKLIST (each update)
   [ ] Set SCRIPT_URL on line ~700 to your Apps Script /exec URL
@@ -314,11 +324,14 @@
   }
 
   .stat-icon {
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 9px;
     font-weight: 700;
     display: block;
     color: var(--gold-dim);
     margin-bottom: 0px;
+    text-shadow: 0.4px 0 0 currentColor, -0.4px 0 0 currentColor,
+                 0 0.4px 0 currentColor, 0 -0.4px 0 currentColor;
   }
 
   /* ── SIGNED UP STRIP ── */
