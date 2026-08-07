@@ -48,7 +48,12 @@
                     has bold variants for these characters, and (b) adding a 4-direction
                     text-shadow "faux bold" as a belt-and-suspenders fallback so the
                     thickening shows even on fonts/browsers that ignore font-weight
-                    for symbol glyphs. Same 9px size, same color.
+                    for symbol glyphs. Same 9px size, same color. Confirmed working via
+                    pixel measurement (~3x stroke width increase) but subtle at 9px.
+  v1.20 2026-08-07  .stat-icon stroke pushed heavier per request — text-shadow offsets
+                    increased 0.4px→0.75px (cardinal) and added 4 diagonal offsets at
+                    0.55px for a fuller, more even thickening. No change to font-size,
+                    margin, or layout — zero added vertical space, stroke-only change.
 ─────────────────────────────────────────────────────────────
   DEPLOY CHECKLIST (each update)
   [ ] Set SCRIPT_URL on line ~700 to your Apps Script /exec URL
@@ -330,8 +335,10 @@
     display: block;
     color: var(--gold-dim);
     margin-bottom: 0px;
-    text-shadow: 0.4px 0 0 currentColor, -0.4px 0 0 currentColor,
-                 0 0.4px 0 currentColor, 0 -0.4px 0 currentColor;
+    text-shadow: 0.75px 0 0 currentColor, -0.75px 0 0 currentColor,
+                 0 0.75px 0 currentColor, 0 -0.75px 0 currentColor,
+                 0.55px 0.55px 0 currentColor, -0.55px 0.55px 0 currentColor,
+                 0.55px -0.55px 0 currentColor, -0.55px -0.55px 0 currentColor;
   }
 
   /* ── SIGNED UP STRIP ── */
