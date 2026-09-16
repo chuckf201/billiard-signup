@@ -23,10 +23,17 @@
                     mobile 2×2 grid for screens under 500px
   v1.14 2026-09-16  SCHEDULE_MAP: even teams only (2/4/6), weeks = teams-1,
                     max 4 players per team. Removed odd team counts (3 and 5).
+  v1.15 2026-09-16  Fallback seasonStart updated to 2026-09-29. Update this
+                    each new session so the form shows the right date before
+                    the Config tab loads.
 ─────────────────────────────────────────────────────────────
-  DEPLOY CHECKLIST (each update)
-  [ ] Set SCRIPT_URL on line ~700 to your Apps Script /exec URL
-  [ ] Verify seasonStart fallback date is reasonable
+  DEPLOY CHECKLIST (each new session)
+  ════════════════════════════════════════════════════════
+  [ ] 1. SCRIPT_URL  — line ~893  — replace YOUR_SCRIPT_ID_HERE with real URL
+         Your URL: AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec
+  [ ] 2. seasonStart — line ~896  — update to new session start date (YYYY-MM-DD, must be Tuesday)
+         Current:   '2026-09-29'
+  ════════════════════════════════════════════════════════
   [ ] Commit to GitHub with message: vX.X — YYYY-MM-DD — Description
   [ ] Create GitHub Release tagged vX.X-YYYY-MM-DD
   [ ] Hard refresh form (Ctrl+Shift+R) to verify
@@ -887,10 +894,10 @@
     // Google Apps Script Web App URL
     // ⚠️ IMPORTANT: Replace YOUR_SCRIPT_ID_HERE with your real URL every time you upload to GitHub
     // Your URL: https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec
-    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec',
+    SCRIPT_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec',
 
     // ── Season start date (format: YYYY-MM-DD, must be a Tuesday) ──
-    seasonStart: '2026-9-29',
+    seasonStart: '2026-09-29',
 
     // ── Skip weeks (holidays/breaks between start and end)
     //    Set to 1 or 2 if there's a week off during the season
