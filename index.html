@@ -1,1380 +1,1732 @@
-<!DOCTYPE html>
-<!--
-═══════════════════════════════════════════════════════════════
-  SCGCC Tuesday Men's Billiard League — Signup Form
-  File:     billiards_signup.html (deployed as index.html)
-  Host:     https://chuckf201.github.io/billiard-signup
-  Session:  2026-09-29  ← update this each new session (also update line ~903)
-─────────────────────────────────────────────────────────────
-  VERSION HISTORY
-  v1.0  2026-03-16  Initial working form — JSONP, Sheet logging, emails
-  v1.1  2026-03-18  Live member dropdown from Members tab, email auto-fill
-  v1.2  2026-03-19  Dynamic end dates panel, most likely highlighted
-  v1.3  2026-03-20  Config tab — all season settings from Google Sheet
-  v1.4  2026-03-20  Scrollable signed-up names strip
-  v1.5  2026-03-21  Sub date checkboxes — Tuesday dates auto-generated
-  v1.6  2026-03-22  Script: filter members by Paid=X or M only (col D)
-  v1.7  2026-03-27  Updated SCHEDULE_MAP thresholds: 1-9=3teams, 10-12=4teams, 13-15=5teams, 16+=6teams
-  v1.9  2026-03-31  Maybe: avail-sub only (no sub dates). emailMaybes() follow-up utility added
-  v1.10 2026-03-31  Fix: sub-section correctly hidden on load for Maybe/No
-  v1.11 2026-03-31  Fix: form locks after submission — buttons/inputs disabled
-  v1.12 2026-04-05  Card max-width 620px → 720px for comfortable 100% zoom viewing
-  v1.13 2026-04-11  End-dates panel: larger fonts, better contrast, two-row layout,
-                    dynamic chip hiding (eliminated scenarios hidden automatically),
-                    mobile 2×2 grid for screens under 500px
-  v1.14 2026-09-16  SCHEDULE_MAP: even teams only (2/4/6), weeks = teams-1,
-                    max 4 players per team. Removed odd team counts (3 and 5).
-  v1.15 2026-09-16  Fallback seasonStart updated to 2026-09-29. Update this
-                    each new session so the form shows the right date before
-                    the Config tab loads.
-  v1.16 2026-09-18  Form auto-resets after 5-second countdown instead of locking.
-                    Enables multi-signup workflow without page refresh.
-─────────────────────────────────────────────────────────────
-  DEPLOY CHECKLIST (each new session)
-  ════════════════════════════════════════════════════════
-  [ ] 1. SCRIPT_URL  — line ~893  — replace YOUR_SCRIPT_ID_HERE with real URL
-         Your URL: AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec
-  [ ] 2. seasonStart — line ~896  — update to new session start date (YYYY-MM-DD, must be Tuesday)
-         Current:   '2026-09-29'
-  ════════════════════════════════════════════════════════
-  [ ] Commit to GitHub with message: vX.X — YYYY-MM-DD — Description
-  [ ] Create GitHub Release tagged vX.X-YYYY-MM-DD
-  [ ] Hard refresh form (Ctrl+Shift+R) to verify
-═══════════════════════════════════════════════════════════════
--->
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Men's Tuesday Billiard League – Sign Up</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --green-deep:    #0d2e1a;
-    --green-dark:    #143d22;
-    --green-mid:     #1a5c30;
-    --green-felt:    #1e6b38;
-    --green-light:   #2a8a4a;
-    --gold:          #c9a84c;
-    --gold-light:    #e8c96a;
-    --gold-dim:      #8a6f2e;
-    --cream:         #f5f0e8;
-    --white:         #ffffff;
-    --red:           #c0392b;
-    --red-dark:      #922b21;
-    --gray-dark:     #2c2c2c;
-    --radius:        10px;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    min-height: 100vh;
-    background: var(--green-deep);
-    background-image:
-      radial-gradient(ellipse at 20% 20%, rgba(26,92,48,0.4) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 80%, rgba(13,46,26,0.6) 0%, transparent 60%),
-      repeating-linear-gradient(
-        45deg,
-        transparent,
-        transparent 40px,
-        rgba(255,255,255,0.012) 40px,
-        rgba(255,255,255,0.012) 41px
-      );
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 30px 16px 50px;
-    font-family: 'Crimson Pro', Georgia, serif;
-  }
-
-  .card {
-    width: 100%;
-    max-width: 720px;
-    background: var(--green-dark);
-    border: 2px solid var(--gold-dim);
-    border-radius: 16px;
-    box-shadow:
-      0 0 0 1px rgba(201,168,76,0.15),
-      0 8px 40px rgba(0,0,0,0.6),
-      inset 0 1px 0 rgba(201,168,76,0.2);
-    overflow: hidden;
-    position: relative;
-  }
-
-  /* Corner diamonds */
-  .card::before, .card::after {
-    content: '◆';
-    position: absolute;
-    color: var(--gold-dim);
-    font-size: 11px;
-    opacity: 0.7;
-  }
-  .card::before { top: 14px; left: 18px; }
-  .card::after  { top: 14px; right: 18px; }
-
-  /* ── HEADER ── */
-  .header {
-    background: linear-gradient(180deg, var(--green-mid) 0%, var(--green-dark) 100%);
-    border-bottom: 1px solid var(--gold-dim);
-    padding: 28px 24px 20px;
-    text-align: center;
-  }
-
-  .club-name {
-    font-family: 'Oswald', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 3px;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-
-  .league-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 2rem;
-    font-weight: 900;
-    color: var(--white);
-    line-height: 1.1;
-    margin-bottom: 8px;
-  }
-
-  .league-title span {
-    color: var(--gold);
-  }
-
-  .season-dates {
-    font-family: 'Crimson Pro', serif;
-    font-size: 16px;
-    color: rgba(245,240,232,0.92);
-    letter-spacing: 0.5px;
-    margin-bottom: 14px;
-  }
-
-  .balls-row {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 4px;
-  }
-
-  .ball {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    box-shadow: inset -3px -2px 4px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.5);
-  }
-  .b1  { background: #f0f0f0; }
-  .b2  { background: #f5d800; }
-  .b3  { background: #c0392b; }
-  .b4  { background: #2471a3; }
-  .b5  { background: #7d3c98; }
-  .b6  { background: #e67e22; }
-  .b8  { background: #1c1c1c; }
-
-  /* ── END DATES PANEL ── */
-  .end-dates-panel {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    margin: 10px 0 4px;
-  }
-
-  /* Row 1 — Most Likely chip, centered alone */
-  .end-dates-row-1 {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-  }
-
-  /* Row 2 — remaining chips in a row */
-  .end-dates-row-2 {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .end-date-chip {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 6px 18px;
-    border-radius: 20px;
-    border: 1px solid rgba(201,168,76,0.25);
-    background: rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-    min-width: 120px;
-  }
-
-  .end-date-chip.likely {
-    border: 2px solid var(--gold);
-    background: rgba(201,168,76,0.18);
-    box-shadow: 0 0 12px rgba(201,168,76,0.25);
-    min-width: 160px;
-  }
-
-  .end-date-chip.dimmed {
-    opacity: 0.55;
-  }
-
-  .chip-label {
-    font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #FFE680;
-    margin-bottom: 2px;
-  }
-
-  .end-date-chip.likely .chip-label {
-    color: #FFE680;
-  }
-
-  .chip-date {
-    font-family: 'Crimson Pro', serif;
-    font-size: 18px;
-    font-weight: 600;
-    color: rgba(245,240,232,0.92);
-  }
-
-  .end-date-chip.likely .chip-date {
-    color: #FFFFFF;
-  }
-
-  .chip-likely-tag {
-    font-family: 'Oswald', sans-serif;
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-top: 2px;
-    display: none;
-  }
-
-  .end-date-chip.likely .chip-likely-tag {
-    display: block;
-  }
-
-  /* Mobile 2×2 grid for row-2 chips */
-  @media (max-width: 500px) {
-    .end-dates-row-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      width: 100%;
-    }
-    .end-dates-row-2 .end-date-chip {
-      min-width: unset;
-      width: 100%;
-    }
-  }
-
-  /* ── STATS BAR ── */
-  .stats-bar {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    border-bottom: 1px solid rgba(201,168,76,0.25);
-  }
-
-  .stat {
-    padding: 14px 10px;
-    text-align: center;
-    border-right: 1px solid rgba(201,168,76,0.2);
-  }
-  .stat:last-child { border-right: none; }
-
-  .stat-num {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.7rem;
-    font-weight: 700;
-    color: var(--gold);
-    line-height: 1;
-    display: block;
-  }
-
-  .stat-label {
-    font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: rgba(245,240,232,0.5);
-    text-transform: uppercase;
-    margin-top: 3px;
-    display: block;
-  }
-
-  .stat-icon {
-    font-size: 10px;
-    display: block;
-    color: var(--gold-dim);
-    margin-bottom: 2px;
-  }
-
-  /* ── SIGNED UP STRIP ── */
-  .signed-strip {
-    background: rgba(0,0,0,0.2);
-    border-bottom: 1px solid rgba(201,168,76,0.15);
-    padding: 10px 20px;
-  }
-
-  .signed-label {
-    font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: rgba(245,240,232,0.45);
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 6px;
-  }
-
-  .signed-scroll {
-    max-height: 72px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--gold-dim) transparent;
-  }
-
-  .signed-scroll::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  .signed-scroll::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .signed-scroll::-webkit-scrollbar-thumb {
-    background: var(--gold-dim);
-    border-radius: 2px;
-  }
-
-  .signed-names {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 12px;
-    padding-right: 6px;
-  }
-
-  .signed-name-chip {
-    font-family: 'Crimson Pro', serif;
-    font-size: 13px;
-    color: var(--gold-light);
-    font-style: italic;
-    white-space: nowrap;
-  }
-
-  .signed-name-chip::after {
-    content: '·';
-    margin-left: 12px;
-    color: var(--gold-dim);
-    opacity: 0.5;
-    font-style: normal;
-  }
-
-  .signed-name-chip:last-child::after {
-    content: '';
-    margin-left: 0;
-  }
-
-  /* ── FORM BODY ── */
-  .form-body {
-    padding: 28px 28px 24px;
-  }
-
-  .welcome-text {
-    text-align: center;
-    margin-bottom: 26px;
-  }
-
-  .welcome-text p:first-child {
-    font-family: 'Crimson Pro', serif;
-    font-size: 1.2rem;
-    color: var(--cream);
-  }
-
-  .welcome-text .member-name {
-    color: var(--gold);
-    font-weight: 600;
-  }
-
-  .welcome-text p:last-child {
-    font-size: 1rem;
-    color: rgba(245,240,232,0.65);
-    margin-top: 4px;
-  }
-
-  /* ── FIELD GROUPS ── */
-  .field-group {
-    margin-bottom: 22px;
-  }
-
-  .field-label {
-    font-family: 'Oswald', sans-serif;
-    font-size: 10px;
-    letter-spacing: 2.5px;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    display: block;
-  }
-
-  /* Dropdown */
-  .dropdown-wrap {
-    position: relative;
-  }
-
-  select {
-    width: 100%;
-    padding: 13px 40px 13px 16px;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid rgba(201,168,76,0.35);
-    border-radius: var(--radius);
-    color: var(--cream);
-    font-family: 'Crimson Pro', serif;
-    font-size: 1.05rem;
-    appearance: none;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    outline: none;
-  }
-
-  select:focus {
-    border-color: var(--gold);
-    background: rgba(0,0,0,0.45);
-  }
-
-  select option {
-    background: var(--green-deep);
-    color: var(--cream);
-  }
-
-  .dropdown-arrow {
-    position: absolute;
-    right: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--gold);
-    font-size: 12px;
-    pointer-events: none;
-  }
-
-  /* Toggle buttons */
-  .toggle-group {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    border: 1px solid rgba(201,168,76,0.3);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  .toggle-btn {
-    padding: 13px 8px;
-    background: rgba(0,0,0,0.25);
-    border: none;
-    border-right: 1px solid rgba(201,168,76,0.2);
-    color: rgba(245,240,232,0.5);
-    font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
-
-  .toggle-btn:last-child { border-right: none; }
-
-  .toggle-btn:hover {
-    background: rgba(255,255,255,0.07);
-    color: var(--cream);
-  }
-
-  .toggle-btn.active-yes {
-    background: var(--green-light);
-    color: var(--white);
-    font-weight: 600;
-  }
-
-  .toggle-btn.active-maybe {
-    background: rgba(201,168,76,0.25);
-    color: var(--gold-light);
-    font-weight: 600;
-  }
-
-  .toggle-btn.active-no {
-    background: var(--red-dark);
-    color: var(--white);
-    font-weight: 600;
-  }
-
-  /* Sub toggle (2 buttons) */
-  .sub-group {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border: 1px solid rgba(201,168,76,0.3);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  .sub-btn {
-    padding: 13px 8px;
-    background: rgba(0,0,0,0.25);
-    border: none;
-    border-right: 1px solid rgba(201,168,76,0.2);
-    color: rgba(245,240,232,0.5);
-    font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-  }
-
-  .sub-btn:last-child { border-right: none; }
-  .sub-btn:hover { background: rgba(255,255,255,0.07); color: var(--cream); }
-
-  .sub-btn.active-needs {
-    background: var(--gold-dim);
-    color: var(--white);
-    font-weight: 600;
-  }
-
-  .sub-btn.active-none {
-    background: var(--red-dark);
-    color: var(--white);
-    font-weight: 600;
-  }
-
-  /* ── SUB DATES PANEL ── */
-  .sub-dates-panel {
-    display: none;
-    margin-top: 12px;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid rgba(201,168,76,0.25);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    animation: fadeIn 0.2s ease;
-  }
-
-  .sub-dates-panel.show { display: block; }
-
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-
-  .sub-dates-title {
-    font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    display: block;
-  }
-
-  .sub-dates-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 8px;
-  }
-
-  .sub-date-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-  }
-
-  .sub-date-item input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--gold);
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
-  .sub-date-label {
-    font-family: 'Crimson Pro', serif;
-    font-size: 14px;
-    color: var(--cream);
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .sub-date-item:hover .sub-date-label { color: var(--gold-light); }
-  .sub-dates-error {
-    font-family: 'Oswald', sans-serif;
-    font-size: 11px;
-    color: #e74c3c;
-    letter-spacing: 0.5px;
-    margin-top: 8px;
-    display: none;
-  }
-  .sub-dates-error.show { display: block; }
-
-  /* Email input */
-  input[type="email"] {
-    width: 100%;
-    padding: 13px 16px;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid rgba(201,168,76,0.35);
-    border-radius: var(--radius);
-    color: var(--cream);
-    font-family: 'Crimson Pro', serif;
-    font-size: 1.05rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  input[type="email"]:focus {
-    border-color: var(--gold);
-    background: rgba(0,0,0,0.45);
-  }
-
-  input[type="email"]::placeholder {
-    color: rgba(245,240,232,0.35);
-  }
-
-  /* ── SUBMIT BUTTON ── */
-  .submit-btn {
-    width: 100%;
-    padding: 16px;
-    background: linear-gradient(135deg, var(--gold-dim) 0%, var(--gold) 100%);
-    border: none;
-    border-radius: var(--radius);
-    color: var(--green-deep);
-    font-family: 'Oswald', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: opacity 0.2s, transform 0.1s;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-  }
-
-  .submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-  .submit-btn:active { transform: translateY(0); }
-  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-  /* ── CONFIRMATION ── */
-  .confirmation {
-    display: none;
-    background: rgba(42,138,74,0.2);
-    border: 1px solid rgba(42,138,74,0.5);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    margin-top: 16px;
-    text-align: center;
-    color: var(--cream);
-    font-size: 1rem;
-    line-height: 1.6;
-  }
-
-  .confirmation.show { display: block; }
-
-  .confirmation strong {
-    color: var(--gold-light);
-    display: block;
-    margin-bottom: 4px;
-    font-size: 1.05rem;
-  }
-
-  /* ── ERROR ── */
-  .error-msg {
-    color: #e74c3c;
-    font-size: 12px;
-    margin-top: 6px;
-    font-family: 'Oswald', sans-serif;
-    letter-spacing: 0.5px;
-    display: none;
-  }
-
-  .error-msg.show { display: block; }
-
-  /* ── FOOTER ── */
-  .form-footer {
-    border-top: 1px solid rgba(201,168,76,0.2);
-    padding: 14px 24px;
-    text-align: center;
-    font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: rgba(245,240,232,0.3);
-    text-transform: uppercase;
-  }
-
-  .form-footer span { margin: 0 8px; color: var(--gold-dim); }
-
-  /* Loading spinner */
-  .spinner {
-    display: none;
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(13,46,26,0.3);
-    border-top-color: var(--green-deep);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    margin: 0 auto;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .submit-inner { display: flex; align-items: center; justify-content: center; gap: 10px; }
-</style>
-</head>
-<body>
-
-<div class="card">
-
-  <!-- Corner diamonds via CSS -->
-
-  <!-- HEADER -->
-  <div class="header">
-    <div class="club-name">Spruce Creek Golf &amp; Country Club</div>
-    <h1 class="league-title">Men's <span>Tuesday</span> Billiard League</h1>
-    <div class="season-dates" id="season-start-line">Loading…</div>
-    <div class="end-dates-panel" id="end-dates-panel"></div>
-    <div class="balls-row">
-      <div class="ball b1"></div>
-      <div class="ball b2"></div>
-      <div class="ball b3"></div>
-      <div class="ball b4"></div>
-      <div class="ball b5"></div>
-      <div class="ball b6"></div>
-      <div class="ball b8"></div>
-    </div>
-  </div>
-
-  <!-- STATS BAR -->
-  <div class="stats-bar">
-    <div class="stat">
-      <span class="stat-icon">✓</span>
-      <span class="stat-num" id="stat-registered">—</span>
-      <span class="stat-label">Registered</span>
-    </div>
-    <div class="stat">
-      <span class="stat-icon">○</span>
-      <span class="stat-num" id="stat-open">—</span>
-      <span class="stat-label">Open Slots</span>
-    </div>
-    <div class="stat">
-      <span class="stat-icon">✕</span>
-      <span class="stat-num" id="stat-declined">—</span>
-      <span class="stat-label">Declined</span>
-    </div>
-  </div>
-
-  <!-- SIGNED UP STRIP -->
-  <div class="signed-strip">
-    <span class="signed-label">Signed up: <span id="signed-count"></span></span>
-    <div class="signed-scroll">
-      <div class="signed-names" id="signed-names"></div>
-    </div>
-  </div>
-
-  <!-- FORM BODY -->
-  <div class="form-body">
-
-    <div class="welcome-text">
-      <p>Welcome, <span class="member-name" id="welcome-name">Member</span>!</p>
-      <p>Please confirm your participation for the upcoming season.</p>
-    </div>
-
-    <form id="signup-form" novalidate>
-
-      <!-- NAME DROPDOWN -->
-      <div class="field-group">
-        <label class="field-label" for="member-name">Your Name</label>
-        <div class="dropdown-wrap">
-          <select id="member-name" name="member-name" required>
-            <option value="">— Loading members… —</option>
-          </select>
-          <div class="dropdown-arrow">▼</div>
-        </div>
-        <div class="error-msg" id="err-name">Please select your name.</div>
-      </div>
-
-      <!-- PARTICIPATION TOGGLE -->
-      <div class="field-group">
-        <label class="field-label">Will you participate this season?</label>
-        <div class="toggle-group">
-          <button type="button" class="toggle-btn active-yes" data-value="Yes" id="btn-yes" onclick="setParticipation('Yes')">
-            ✓ Yes, I'm In!
-          </button>
-          <button type="button" class="toggle-btn" data-value="Maybe" id="btn-maybe" onclick="setParticipation('Maybe')">
-            – No… But
-          </button>
-          <button type="button" class="toggle-btn" data-value="No" id="btn-no" onclick="setParticipation('No')">
-            ✕ I'm Out
-          </button>
-        </div>
-        <input type="hidden" id="participation" value="Yes">
-      </div>
-
-      <!-- SUB TOGGLE (shown only when Yes or Maybe) -->
-      <div class="field-group" id="sub-section" style="display:block;">
-        <label class="field-label">Do you need a substitute for any weeks?</label>
-        <div class="sub-group">
-          <button type="button" class="sub-btn" id="btn-needs-sub" onclick="setSub('Yes')">
-            Yes, I Need a Sub
-          </button>
-          <button type="button" class="sub-btn active-none" id="btn-no-sub" onclick="setSub('No')">
-            No Sub Needed
-          </button>
-        </div>
-        <input type="hidden" id="sub-needed" value="No">
-
-        <!-- SUB DATES PANEL — shown when Yes I Need a Sub is selected -->
-        <div class="sub-dates-panel" id="sub-dates-panel">
-          <span class="sub-dates-title">Which Tuesday(s) do you need a sub?</span>
-          <div class="sub-dates-grid" id="sub-dates-grid">
-            <!-- Populated dynamically from season start date -->
-          </div>
-          <div class="sub-dates-error" id="err-sub-dates">Please select at least one date.</div>
-        </div>
-      </div>
-
-      <!-- AVAILABLE TO SUB — shown for Maybe and I'm Out players -->
-      <div class="field-group" id="avail-sub-section" style="display:none;">
-        <label class="field-label">Are you available to substitute for others?</label>
-        <div class="sub-group">
-          <button type="button" class="sub-btn" id="btn-avail-yes" onclick="setAvailSub('Yes')">
-            ✓ Yes, I Can Sub
-          </button>
-          <button type="button" class="sub-btn active-none" id="btn-avail-no" onclick="setAvailSub('No')">
-            No, Not Available
-          </button>
-        </div>
-        <input type="hidden" id="avail-sub" value="No">
-      </div>
-
-      <!-- EMAIL -->
-      <div class="field-group">
-        <label class="field-label" for="member-email">Confirm Your Email</label>
-        <input type="email" id="member-email" name="member-email"
-               placeholder="yourname@email.com" required>
-        <div class="error-msg" id="err-email">Please enter a valid email address.</div>
-      </div>
-
-      <!-- SUBMIT -->
-      <button type="submit" class="submit-btn" id="submit-btn">
-        <div class="submit-inner">
-          <div class="spinner" id="spinner"></div>
-          <span id="submit-label">Submit My Response</span>
-        </div>
-      </button>
-
-      <!-- CONFIRMATION -->
-      <div class="confirmation" id="confirmation">
-        <strong id="conf-headline">✓ Response Submitted!</strong>
-        <span id="conf-message"></span>
-      </div>
-
-    </form>
-  </div>
-
-  <!-- FOOTER -->
-  <div class="form-footer">
-    Spruce Creek Golf &amp; Country Club
-    <span>·</span>
-    Men's Billiard League
-    <span>·</span>
-    Members Only
-  </div>
-
-</div>
-
-<script>
-  // ═══════════════════════════════════════════════════════════════
-  //  CONFIGURATION — Edit these values each season
-  // ═══════════════════════════════════════════════════════════════
-  const CONFIG = {
-    // Google Apps Script Web App URL
-    // ⚠️ IMPORTANT: Replace YOUR_SCRIPT_ID_HERE with your real URL every time you upload to GitHub
-    // Your URL: https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec
-    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxWWN07FQvlMCMM6bFldBj9KaFEQXG2Uz9-75AREt6l89VNxkjVmqk6rNTLS-BN8Aps/exec',
-    
-
-    // ── Season start date (format: YYYY-MM-DD, must be a Tuesday) ──
-    seasonStart: '2026-09-29',
-
-    // ── Skip weeks (holidays/breaks between start and end)
-    //    Set to 1 or 2 if there's a week off during the season
-    skipWeeks: 0,
-
-    // Total league slots
-    totalSlots: 24,
-
-    // Admin email
-    adminEmail: 'monrovian@gmail.com',
-  };
-  // ═══════════════════════════════════════════════════════════════
-
-  // ── Teams → Weeks mapping ──
-  // Key = number of teams, Value = number of playing weeks
-  // ── Teams → Weeks mapping ──
-  // Rule: even teams only (2, 4, 6). Max 4 players per team. Weeks = teams - 1.
-  // minPlayers = threshold where this scenario becomes Most Likely
-  // maxPlayers = upper bound before scenario is hidden from the end-dates panel
-  const SCHEDULE_MAP = [
-    { teams: 2, weeks: 1, minPlayers: 1,  maxPlayers: 8  },
-    { teams: 4, weeks: 3, minPlayers: 9,  maxPlayers: 16 },
-    { teams: 6, weeks: 5, minPlayers: 17, maxPlayers: 24 },
-  ];
-
-  // ── Calculate a Tuesday end date from start + N weeks + skipWeeks ──
-  function calcEndDate(startDateStr, playWeeks, skipWeeks) {
-    const start = new Date(startDateStr + 'T12:00:00');
-    const totalWeeks = playWeeks + skipWeeks;
-    const end = new Date(start);
-    end.setDate(start.getDate() + (totalWeeks - 1) * 7);
-    return end;
-  }
-
-  // ── Format date as MM-DD-YYYY ──
-  function fmtDate(d) {
+// ═══════════════════════════════════════════════════════════════════════════
+//  SCGCC Tuesday Men's Billiard League — Signup Form Backend
+//  File:    BilliardSignup_AppsScript.js
+//  Host:    script.google.com — project: Billiard League Signup
+//  Sheet:   SCGCC Billiard League Signups (Google Sheets)
+// ───────────────────────────────────────────────────────────────────────────
+//  VERSION HISTORY
+//  v1.0  2026-03-16  Initial — doGet/doPost, Sheet logging, Gmail emails
+//  v1.1  2026-03-18  getMembers() from Members tab, current+prev year filter
+//  v1.2  2026-03-19  Separate ?action=members endpoint, JSONP support
+//  v1.3  2026-03-20  getSheetConfig() — all season config from Config tab
+//                    createConfigTab() setup helper, formatSheetDate() fix
+//  v1.4  2026-03-20  No change (scrollable strip was HTML-only)
+//  v1.5  2026-03-21  subDates field — col F in Sheet, included in emails
+//  v1.6  2026-03-22  getMembers() filters by Paid=X or M (col D) only
+//  v1.7  2026-03-27  SCHEDULE_MAP thresholds updated: 1-9=3teams, 10-12=4teams, 13-15=5teams, 16+=6teams
+//  v1.8  2026-03-31  Email try/catch — catches silent Gmail failures. from: fix.
+//  v1.9  2026-03-31  Maybe: avail-sub only, no sub dates. Col H Follow-up Status.
+//                    emailMaybes() follow-up utility. getStats() Yes/Maybe separate.
+//  v2.0  2026-03-31  Dual admin support — Club Email row in Config tab.
+//                    getAdminRecipients() sends all notifications to both admins.
+//  v2.1  2026-03-31  setupMaybeFollowUpTrigger() — auto-schedules emailMaybes()
+//                    4 days before session start. removeMaybeFollowUpTrigger(),
+//                    listTriggers() helpers added.
+//  v2.2  2026-04-03  emailMaybes() skips if league is full — notifies admin.
+//                    Followup Days added to Config tab — trigger uses it.
+//                    Open slots count shown in follow-up emails.
+//  v2.3  2026-04-03  testMaybeFollowUp() wrapper — Scenarios A/B/C.
+//                    addButtonsViaCheckboxes() — admin action panel in Config tab.
+//                    installOnEditTrigger() + onConfigCheckbox() — checkbox buttons.
+//  v2.4  2026-04-11  sendAnnouncementEmail() — sends season signup announcement to
+//                    all active members. Added as checkbox button in Config tab.
+//  v2.5  2026-04-11  sendAnnouncementEmail() upgraded to modal dialog with editable
+//                    subject, editable message body, recipient count preview, Cancel
+//                    and Send buttons. doSendAnnouncement(), cancelAnnouncement(),
+//                    showAnnouncementResult() support functions added.
+//  v2.6  2026-04-12  onOpen() custom menu added — "⚙ Billiard League" appears in
+//                    Spreadsheet menu bar. Required because HtmlService dialogs
+//                    cannot be opened from onEdit checkbox triggers. Announcement
+//                    now launched from menu item instead of checkbox.
+//  v2.7  2026-04-12  Test mode checkbox added to announcement dialog. Sends preview
+//                    to admin only with member count shown. Live send unchanged.
+//  v2.8  2026-04-12  buildAnnouncementHtml() — rich HTML email in SCGCC green/gold
+//                    theme. Header banner, CTA button, details strip (date/slots/time),
+//                    gold dividers, footer. Plain text fallback included for all sends.
+//  v2.9  2026-04-13  Global rename: 'season' and 'tournament' -> 'session' in all user-facing text
+//  v3.0  2026-04-13  Fixed unprintable emoji in HTML email body (» Sign up, [TEST MODE] banner)
+//  v3.1  2026-04-26  Fixed: session date in announcement email now reads live from
+//                    Config tab B2 (was using wrong cfg key names season_start/total_slots
+//                    instead of seasonStart/totalSlots). Fallback changed from hardcoded
+//                    date to 'session start date'. Fixed 'this year' -> 'this session'.
+//                    theme. Header banner, CTA button, details strip (date/slots/time),
+//                    gold dividers, footer. Plain text fallback included for all sends.
+//  v3.2  2026-11-11  Announcement dialog: optional image (Google Drive link or https URL).
+//                    Drive images are embedded inline (no public sharing needed).
+//                    New DriveApp use -> Google asks to re-authorize once.
+//  v3.3  2026-11-13  Fixed garbled emoji (diamonds) in announcement email header:
+//                    replaced with a gold line.
+//  v3.4  2026-11-13  Links in the email body are bold bright yellow (was dark blue).
+// ───────────────────────────────────────────────────────────────────────────
+//  DEPLOY CHECKLIST (each update)
+//  [ ] Paste new code → Ctrl+S to save
+//  [ ] Deploy → Manage Deployments → Edit → New Version → Deploy
+//  [ ] Run testSubmission to verify emails + Sheet entry
+//  [ ] Check Executions log shows latest version number
+//  [ ] Update GitHub Release with matching version tag
+// ═══════════════════════════════════════════════════════════════════════════
+//
+//  SETUP STEPS (one-time):
+//  1. Go to script.google.com → New Project → paste this code
+//  2. Deploy → New Deployment → Web App
+//       Execute as: Me
+//       Who has access: Anyone
+//  3. Copy the deployment URL → paste into billiards_signup.html CONFIG.SCRIPT_URL
+//  4. Run createConfigTab() to create the Config tab in your Google Sheet
+//  5. Share the HTML file link with members
+//
+//  EACH NEW SEASON — update values in the Config tab only. No code changes needed.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Static config — tab/column names only, never need changing ──
+const CONFIG = {
+  SHEET_NAME:     'Signups',
+  MEMBERS_SHEET:  'Members',
+  CONFIG_SHEET:   'Config',
+  LEAGUE_NAME:    "Men's Tuesday Billiard League",
+  CLUB_NAME:      'Spruce Creek Golf & Country Club',
+  // Membership table column indices (1-based)
+  // Count=B(2), Year=C(3), Fname=F(6), Lname=G(7), Email=I(9)
+  COL_YEAR:   3,
+  COL_PAID:   4,   // Column D — X = active/paid, M = paid (both qualify)
+  COL_FNAME:  6,
+  COL_LNAME:  7,
+  COL_EMAIL:  9,
+};
+
+// ════════════════════════════════════════════════════════════════
+//  onOpen()
+//  Adds "⚙ Billiard League" custom menu to the Spreadsheet.
+//  This is the ONLY reliable way to trigger modal dialogs —
+//  onEdit triggers cannot open HtmlService dialogs.
+// ════════════════════════════════════════════════════════════════
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('⚙ Billiard League')
+    .addItem('📣 Send Session Announcement…', 'sendAnnouncementEmail')
+    .addSeparator()
+    .addItem('✉ Email Maybe Players Now',    'emailMaybes')
+    .addItem('✉ Email Roster (CSV)',          'emailRoster')
+    .addSeparator()
+    .addItem('▶ Setup Follow-up Trigger',    'setupMaybeFollowUpTrigger')
+    .addItem('✕ Remove Follow-up Trigger',   'removeMaybeFollowUpTrigger')
+    .addItem('🔍 List Active Triggers',       'listTriggers')
+    .addSeparator()
+    .addItem('🧪 Test: Full Pipeline',        'testSubmission')
+    .addToUi();
+}
+
+// ── Format a value from Sheets as YYYY-MM-DD string ──
+// Google Sheets auto-converts date cells to Date objects — this handles both
+function formatSheetDate(val) {
+  if (!val) return '';
+  // Already a string in YYYY-MM-DD format
+  if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val.trim())) return val.trim();
+  // Google Sheets Date object or date string
+  try {
+    const d  = new Date(val);
+    const yy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
-    return `${mm}-${dd}-${d.getFullYear()}`;
+    return `${yy}-${mm}-${dd}`;
+  } catch(e) {
+    return val.toString().trim();
   }
+}
 
-  // ── Determine most likely scenario from registered count ──
-  function getLikelyScenario(registered) {
-    let best = SCHEDULE_MAP[0];
-    for (const s of SCHEDULE_MAP) {
-      if (registered >= s.minPlayers) best = s;
-    }
-    return best;
-  }
+// ── Read season config from the Config tab ──
+function getSheetConfig() {
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(CONFIG.CONFIG_SHEET);
 
-  // ── Render the end-dates panel ──
-  // Row 1: Most Likely chip alone, centered, gold-bordered
-  // Row 2: Remaining viable chips (hidden if registered > maxPlayers)
-  function renderEndDates(registered) {
-    const panel    = document.getElementById('end-dates-panel');
-    const likely   = getLikelyScenario(registered);
-    const startStr = CONFIG.seasonStart;
-
-    // Filter out scenarios that are no longer viable
-    const visible = SCHEDULE_MAP.filter(s => registered <= s.maxPlayers);
-
-    const likelyChip = visible.filter(s => s.teams === likely.teams);
-    const otherChips = visible.filter(s => s.teams !== likely.teams);
-
-    function makeChip(s, cls) {
-      const endDate = calcEndDate(startStr, s.weeks, CONFIG.skipWeeks);
-      return `<div class="${cls}">
-        <span class="chip-label">${s.teams} Teams · ${s.weeks} Wks</span>
-        <span class="chip-date">End: ${fmtDate(endDate)}</span>
-        <span class="chip-likely-tag">★ Most Likely</span>
-      </div>`;
-    }
-
-    const row1 = likelyChip.map(s => makeChip(s, 'end-date-chip likely')).join('');
-    const row2 = otherChips.map(s => makeChip(s, 'end-date-chip dimmed')).join('');
-
-    panel.innerHTML =
-      (row1 ? `<div class="end-dates-row-1">${row1}</div>` : '') +
-      (row2 ? `<div class="end-dates-row-2">${row2}</div>` : '');
-  }
-
-  // ── Populate start date line ──
-  const startDisplay = new Date(CONFIG.seasonStart + 'T12:00:00');
-  document.getElementById('season-start-line').textContent =
-    `Start: ${fmtDate(startDisplay)}  ·  Possible End Dates ↓`;
-
-  // Initial render with 0 registered (updates after stats load)
-  renderEndDates(0);
-
-  // ── JSONP helper — injects a script tag, bypasses CORS completely ──
-  // Uses a timeout to detect failures since onerror is unreliable
-  function apiFetch(action, params, onSuccess, onError) {
-    const cbName  = '_cb_' + action.replace(/\W/g,'') + '_' + Date.now();
-    const timeout = setTimeout(function() {
-      cleanup();
-      console.warn('apiFetch timeout for: ' + action);
-      if (onError) onError();
-    }, 10000); // 10 second timeout
-
-    function cleanup() {
-      clearTimeout(timeout);
-      delete window[cbName];
-      const el = document.getElementById(cbName);
-      if (el) el.parentNode.removeChild(el);
-    }
-
-    window[cbName] = function(data) {
-      cleanup();
-      onSuccess(data);
+  if (!sheet) {
+    Logger.log('WARNING: Config tab not found — using defaults');
+    return {
+      seasonStart:  '2026-03-03',
+      skipWeeks:    0,
+      totalSlots:   24,
+      adminEmail:   'monrovian@gmail.com',
+      clubEmail:    '',
+      followupDays: 4,
     };
-
-    const base   = CONFIG.SCRIPT_URL + '?action=' + encodeURIComponent(action);
-    const extra  = params ? '&' + new URLSearchParams(params).toString() : '';
-    const src    = base + extra + '&callback=' + cbName;
-
-    const script    = document.createElement('script');
-    script.id       = cbName;
-    script.src      = src;
-    script.onerror  = function() { cleanup(); if (onError) onError(); };
-    document.head.appendChild(script);
   }
 
-  // ── Email lookup map: fullName → email ──
-  let memberEmailMap = {};
+  const data = sheet.getDataRange().getValues();
+  const cfg  = {};
 
-  // ── Load live stats + season config from sheet ──
-  function loadStats() {
-    apiFetch('stats', null,
-      function(data) {
-        const reg = data.registered ?? 0;
-        document.getElementById('stat-registered').textContent = reg;
-        document.getElementById('stat-open').textContent       = Math.max(0, (data.totalSlots || CONFIG.totalSlots) - reg);
-        document.getElementById('stat-declined').textContent   = data.declined ?? 0;
-        const signedUpNames = data.signedUpNames || [];
-        const namesEl = document.getElementById('signed-names');
-        const countEl = document.getElementById('signed-count');
-
-        if (signedUpNames.length === 0) {
-          namesEl.innerHTML = '<span class="signed-name-chip" style="opacity:0.4;font-style:normal;">None yet</span>';
-          countEl.textContent = '';
-        } else {
-          countEl.textContent = '(' + signedUpNames.length + ')';
-          namesEl.innerHTML = signedUpNames.map(function(name) {
-            return '<span class="signed-name-chip">' + name + '</span>';
-          }).join('');
-        }
-
-        // Apply season config from sheet if available
-        if (data.seasonStart) CONFIG.seasonStart = data.seasonStart;
-        if (data.skipWeeks  !== undefined) CONFIG.skipWeeks  = data.skipWeeks;
-        if (data.totalSlots !== undefined) CONFIG.totalSlots = data.totalSlots;
-
-        // Update start date display
-        const startDisplay = new Date(CONFIG.seasonStart + 'T12:00:00');
-        document.getElementById('season-start-line').textContent =
-          'Start: ' + fmtDate(startDisplay) + '  ·  Possible End Dates ↓';
-
-        renderEndDates(reg);
-      },
-      function() {
-        document.getElementById('stat-registered').textContent = '—';
-        document.getElementById('stat-open').textContent       = '—';
-        document.getElementById('stat-declined').textContent   = '—';
-      }
-    );
-  }
-
-  // ── Load member list for dropdown ──
-  function loadMembers() {
-    apiFetch('members', null,
-      function(data) {
-        if (!data.members || data.members.length === 0) return;
-        const sel = document.getElementById('member-name');
-        sel.innerHTML = '<option value="">— Select your name —</option>';
-        memberEmailMap = {};
-        data.members.forEach(function(m) {
-          const opt       = document.createElement('option');
-          opt.value       = m.name;
-          opt.textContent = m.name;
-          sel.appendChild(opt);
-          if (m.email) memberEmailMap[m.name] = m.email;
-        });
-      },
-      function() {
-        document.getElementById('member-name').innerHTML =
-          '<option value="">— Could not load members —</option>';
-      }
-    );
-  }
-
-  loadStats();
-  loadMembers();
-
-  // ── State ──
-  let participation = 'Yes';
-  let subNeeded     = 'No';
-
-  // ── Update welcome name + auto-fill email when dropdown changes ──
-  document.getElementById('member-name').addEventListener('change', function () {
-    const selected = this.value;
-    const first    = selected.split(' ')[0] || 'Member';
-    document.getElementById('welcome-name').textContent = first;
-
-    // Auto-fill email if found in Members tab
-    const emailEl = document.getElementById('member-email');
-    if (selected && memberEmailMap[selected]) {
-      emailEl.value = memberEmailMap[selected];
-    } else {
-      emailEl.value = '';
-    }
+  data.forEach(function(row) {
+    const key = (row[0] || '').toString().trim().toLowerCase().replace(/\s+/g, '_');
+    const val = row[1];
+    cfg[key] = val;
   });
 
-  // ── Participation toggle ──
-  function setParticipation(val) {
-    participation = val;
-    document.getElementById('participation').value = val;
+  return {
+    seasonStart:  formatSheetDate(cfg['season_start']) || '2026-03-03',
+    skipWeeks:    parseInt(cfg['skip_weeks'])   || 0,
+    totalSlots:   parseInt(cfg['total_slots'])  || 24,
+    adminEmail:   (cfg['admin_email'] || 'monrovian@gmail.com').toString().trim(),
+    clubEmail:    (cfg['club_email']  || '').toString().trim(),
+    followupDays: parseInt(cfg['followup_days']) || 4,
+  };
+}
 
-    const btnYes      = document.getElementById('btn-yes');
-    const btnMaybe    = document.getElementById('btn-maybe');
-    const btnNo       = document.getElementById('btn-no');
-    const subSec      = document.getElementById('sub-section');
-    const availSubSec = document.getElementById('avail-sub-section');
+// ── One-time setup: creates the Config tab with default values ──
+// Run this once from the Apps Script editor after deploying
+function createConfigTab() {
+  const ss       = SpreadsheetApp.getActiveSpreadsheet();
+  let   sheet    = ss.getSheetByName(CONFIG.CONFIG_SHEET);
 
-    btnYes.className   = 'toggle-btn';
-    btnMaybe.className = 'toggle-btn';
-    btnNo.className    = 'toggle-btn';
+  if (sheet) {
+    Logger.log('Config tab already exists.');
+    return;
+  }
 
-    if (val === 'Yes') {
-      // YES — show sub dates section, hide avail-sub
-      btnYes.className          = 'toggle-btn active-yes';
-      subSec.style.display      = 'block';
-      availSubSec.style.display = 'none';
-      setAvailSub('No');
-    } else if (val === 'Maybe') {
-      // MAYBE — hide sub dates, show "available to sub" only
-      // Maybe players are potential subs, not team players needing subs
-      btnMaybe.className        = 'toggle-btn active-maybe';
-      subSec.style.display      = 'none';
-      availSubSec.style.display = 'block';
-      setSub('No');
-      document.querySelectorAll('input[name="sub-date"]').forEach(function(cb) { cb.checked = false; });
-      document.getElementById('sub-dates-panel').classList.remove('show');
-    } else {
-      // I'M OUT — hide sub dates, show "available to sub"
-      btnNo.className           = 'toggle-btn active-no';
-      subSec.style.display      = 'none';
-      availSubSec.style.display = 'block';
-      setSub('No');
-      document.querySelectorAll('input[name="sub-date"]').forEach(function(cb) { cb.checked = false; });
-      document.getElementById('sub-dates-panel').classList.remove('show');
+  sheet = ss.insertSheet(CONFIG.CONFIG_SHEET);
+
+  // Header row
+  sheet.getRange(1, 1, 1, 2).setValues([['Setting', 'Value']]);
+  sheet.getRange(1, 1, 1, 2)
+    .setFontWeight('bold')
+    .setBackground('#143d22')
+    .setFontColor('#c9a84c');
+
+  // Config rows — Season Start stored as plain text to prevent Sheets date conversion
+  const rows = [
+    ['Season Start',   '2026-03-03'],
+    ['Skip Weeks',     0],
+    ['Total Slots',    24],
+    ['Admin Email',    'monrovian@gmail.com'],
+    ['Club Email',     'scgcc.mens.billiards.club@gmail.com'],
+    ['Followup Days',  4],
+  ];
+  sheet.getRange(2, 1, rows.length, 2).setValues(rows);
+  sheet.getRange(2, 2).setNumberFormat('@');
+
+  sheet.setColumnWidth(1, 160);
+  sheet.setColumnWidth(2, 260);
+  sheet.getRange(2, 1, rows.length, 1).setFontWeight('bold').setBackground('#f2f2f2');
+  sheet.setFrozenRows(1);
+
+  sheet.getRange(2, 2).setNote('Format: YYYY-MM-DD — must be a Tuesday');
+  sheet.getRange(3, 2).setNote('Set to 1 or 2 if a holiday falls during the session, otherwise 0');
+  sheet.getRange(4, 2).setNote('Maximum number of players in the league');
+  sheet.getRange(5, 2).setNote('Primary admin — receives all submission notifications');
+  sheet.getRange(6, 2).setNote('Club/shared admin email — also receives all notifications. Leave blank to disable.');
+  sheet.getRange(7, 2).setNote('Days before session start to send Maybe follow-up emails (default: 4)');
+
+  Logger.log('Config tab created successfully. Update values for the new session here.');
+}
+
+// ── Teams → Weeks mapping (matches HTML form) ──
+// minPlayers = threshold where this scenario becomes Most Likely
+// 3 teams: 1-9 players, 4 teams: 10-12, 5 teams: 13-15, 6 teams: 16+
+const SCHEDULE_MAP = [
+  { teams: 3, weeks: 3, minPlayers: 1,  maxPlayers: 9  },
+  { teams: 4, weeks: 3, minPlayers: 10, maxPlayers: 12 },
+  { teams: 5, weeks: 5, minPlayers: 13, maxPlayers: 15 },
+  { teams: 6, weeks: 5, minPlayers: 16, maxPlayers: 24 },
+];
+
+// ── Calculate end date (Tuesday) from start + play weeks + skip weeks ──
+function calcEndDate(startStr, playWeeks, skipWeeks) {
+  if (!startStr || !playWeeks) return 'TBD';
+  const parts = startStr.split('-');
+  const start = new Date(
+    parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12, 0, 0
+  );
+  const totalWeeks = (playWeeks || 0) + (skipWeeks || 0);
+  start.setDate(start.getDate() + (totalWeeks - 1) * 7);
+  const mm = String(start.getMonth() + 1).padStart(2, '0');
+  const dd = String(start.getDate()).padStart(2, '0');
+  return `${mm}-${dd}-${start.getFullYear()}`;
+}
+
+// ── Format start date for display ──
+function formatStartDate(startStr) {
+  if (!startStr) return 'TBD';
+  const parts = startStr.split('-');
+  const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12);
+  return `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}-${d.getFullYear()}`;
+}
+
+// ── TEST FUNCTION — run this from the editor to verify everything works ──
+// Select "testSubmission" from the function dropdown, then click Run
+function testSubmission() {
+  const cfg = getSheetConfig();
+  const fakeData = {
+    action:        'submit',
+    name:          'Chuck Fingerman',
+    email:         cfg.adminEmail,
+    participation: 'Yes',
+    subNeeded:     'No',
+    timestamp:     new Date().toISOString(),
+    adminEmail:    cfg.adminEmail,
+  };
+  const result = handleSubmission(fakeData);
+  Logger.log('Test result: ' + JSON.stringify(result));
+  Logger.log('Session config: ' + JSON.stringify(cfg));
+  Logger.log('Schedule block:\n' + buildScheduleBlock(1));
+  Logger.log('End dates:');
+  SCHEDULE_MAP.forEach(s => {
+    Logger.log(`  ${s.teams} teams x ${s.weeks} wks -> ${calcEndDate(cfg.seasonStart, s.weeks, cfg.skipWeeks)}`);
+  });
+}
+
+// ── Build the schedule scenarios string for emails ──
+function buildScheduleBlock(registered) {
+  const cfg  = getSheetConfig();
+  let likely = SCHEDULE_MAP[0];
+  for (const s of SCHEDULE_MAP) {
+    if (registered >= s.minPlayers) likely = s;
+  }
+  const lines = SCHEDULE_MAP.map(s => {
+    const endDate = calcEndDate(cfg.seasonStart, s.weeks, cfg.skipWeeks);
+    const tag = (s.teams === likely.teams) ? ' ← Most Likely' : '';
+    return `  ${s.teams} Teams (${s.weeks} wks):  End ${endDate}${tag}`;
+  });
+  return lines.join('\n');
+}
+
+// ── Column order in the Sheet ──
+const COLS = {
+  TIMESTAMP:        1,
+  NAME:             2,
+  EMAIL:            3,
+  PARTICIPATION:    4,
+  SUB_NEEDED:       5,
+  SUB_DATES:        6,
+  AVAIL_SUB:        7,
+  FOLLOW_UP_STATUS: 8,   // Manually updated: Pending / Confirmed Yes / Confirmed No
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  GET — returns live stats (registered count, declined, names)
+// ═══════════════════════════════════════════════════════════════════════════
+function doGet(e) {
+  const action   = e.parameter.action;
+  const callback = e.parameter.callback;
+  const cfg      = getSheetConfig();
+
+  // ── Handle form submission via GET params ──
+  if (action === 'submit') {
+    try {
+      const data = {
+        name:          e.parameter.name,
+        email:         e.parameter.email,
+        participation: e.parameter.participation,
+        subNeeded:     e.parameter.subNeeded,
+        subDates:      e.parameter.subDates || '',
+        availSub:      e.parameter.availSub  || 'No',
+        adminEmail:    cfg.adminEmail,
+      };
+      const result = handleSubmission(data);
+      return jsonpResponse(result, callback);
+    } catch(err) {
+      return jsonpResponse({ success: false, error: err.message }, callback);
     }
   }
 
-  // ── Available to sub toggle (No/Maybe players only) ──
-  function setAvailSub(val) {
-    document.getElementById('avail-sub').value = val;
-    const btnYes = document.getElementById('btn-avail-yes');
-    const btnNo  = document.getElementById('btn-avail-no');
-    if (btnYes) btnYes.className = val === 'Yes' ? 'sub-btn active-needs' : 'sub-btn';
-    if (btnNo)  btnNo.className  = val === 'No'  ? 'sub-btn active-none'  : 'sub-btn';
+  // ── Return live stats + season config for the form ──
+  if (action === 'stats') {
+    const stats = getStats();
+    // Merge season config into stats response so form gets it in one call
+    stats.seasonStart = cfg.seasonStart;
+    stats.skipWeeks   = cfg.skipWeeks;
+    stats.totalSlots  = cfg.totalSlots;
+    return jsonpResponse(stats, callback);
   }
 
-  // ── Generate Tuesday dates for the season ──
-  function getSeasonTuesdays() {
-    const tuesdays = [];
-    const start    = new Date(CONFIG.seasonStart + 'T12:00:00');
-    const likely   = getLikelyScenario(0); // use max weeks for full range
-    const maxWeeks = SCHEDULE_MAP[SCHEDULE_MAP.length - 1].weeks + CONFIG.skipWeeks;
+  // ── Return member list for dropdown ──
+  if (action === 'members') {
+    return jsonpResponse({ members: getMembers() }, callback);
+  }
 
-    for (let w = 0; w < maxWeeks; w++) {
-      const d = new Date(start);
-      d.setDate(start.getDate() + w * 7);
-      tuesdays.push(fmtDate(d));
+  // Default
+  return ContentService
+    .createTextOutput('SCGCC Billiard League Signup — API running.')
+    .setMimeType(ContentService.MimeType.TEXT);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  POST — receives form submission, logs to sheet, sends emails
+// ═══════════════════════════════════════════════════════════════════════════
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+
+    if (data.action === 'submit') {
+      const result = handleSubmission(data);
+      return jsonResponse(result);
     }
-    return tuesdays;
+
+    return jsonResponse({ success: false, error: 'Unknown action' });
+
+  } catch (err) {
+    return jsonResponse({ success: false, error: err.message });
+  }
+}
+
+// ── Core submission handler ──
+function handleSubmission(data) {
+  const sheet = getOrCreateSheet();
+  const cfg   = getSheetConfig();
+
+  const existingRow = findExistingRow(sheet, data.name);
+  const timestamp   = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
+
+  // Auto-set follow-up status for Maybe players
+  const followUp = (data.participation === 'Maybe') ? 'Pending' : '';
+
+  if (existingRow) {
+    sheet.getRange(existingRow, COLS.TIMESTAMP).setValue(timestamp + ' (updated)');
+    sheet.getRange(existingRow, COLS.EMAIL).setValue(data.email);
+    sheet.getRange(existingRow, COLS.PARTICIPATION).setValue(data.participation);
+    sheet.getRange(existingRow, COLS.SUB_NEEDED).setValue(data.subNeeded);
+    sheet.getRange(existingRow, COLS.SUB_DATES).setValue(data.subDates  || '');
+    sheet.getRange(existingRow, COLS.AVAIL_SUB).setValue(data.availSub  || 'No');
+    // Only set follow-up if it's a Maybe — don't overwrite a manually updated status
+    if (data.participation === 'Maybe') {
+      const existing = sheet.getRange(existingRow, COLS.FOLLOW_UP_STATUS).getValue();
+      if (!existing) sheet.getRange(existingRow, COLS.FOLLOW_UP_STATUS).setValue('Pending');
+    }
+  } else {
+    sheet.appendRow([
+      timestamp,
+      data.name,
+      data.email,
+      data.participation,
+      data.subNeeded,
+      data.subDates  || '',
+      data.availSub  || 'No',
+      followUp,
+    ]);
+    applyRowFormatting(sheet, sheet.getLastRow(), data.participation);
   }
 
-  // ── Build the sub dates checkboxes ──
-  function buildSubDates() {
-    const grid = document.getElementById('sub-dates-grid');
-    if (grid.children.length > 0) return; // already built
-    const tuesdays = getSeasonTuesdays();
-    grid.innerHTML = tuesdays.map(function(date, i) {
-      return '<label class="sub-date-item">' +
-        '<input type="checkbox" name="sub-date" value="' + date + '" id="sub-date-' + i + '">' +
-        '<span class="sub-date-label">' + date + '</span>' +
-        '</label>';
-    }).join('');
+  const stats = getStats();
+
+  // Wrapped in try/catch so Sheet logging always succeeds even if Gmail fails
+  let emailStatus = 'OK';
+  try {
+    sendMemberEmail(data, stats, cfg, !!existingRow);
+  } catch(emailErr) {
+    emailStatus = 'Member email failed: ' + emailErr.message;
+    Logger.log('ERROR sending member email: ' + emailErr.message);
+  }
+  try {
+    sendAdminEmail(data, stats, cfg, !!existingRow);
+  } catch(emailErr) {
+    emailStatus += ' | Admin email failed: ' + emailErr.message;
+    Logger.log('ERROR sending admin email: ' + emailErr.message);
   }
 
-  // ── Sub toggle ──
-  function setSub(val) {
-    subNeeded = val;
-    document.getElementById('sub-needed').value = val;
-    document.getElementById('btn-needs-sub').className = val === 'Yes' ? 'sub-btn active-needs' : 'sub-btn';
-    document.getElementById('btn-no-sub').className    = val === 'No'  ? 'sub-btn active-none'  : 'sub-btn';
+  return {
+    success: true,
+    updated: !!existingRow,
+    emailStatus: emailStatus,
+    stats:   stats,
+  };
+}
 
-    const panel = document.getElementById('sub-dates-panel');
-    if (val === 'Yes') {
-      buildSubDates();
-      panel.classList.add('show');
-    } else {
-      panel.classList.remove('show');
-      // Clear all checkboxes when hiding
-      document.querySelectorAll('input[name="sub-date"]').forEach(function(cb) {
-        cb.checked = false;
+// ═══════════════════════════════════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════════════════════════════════
+function getStats() {
+  const sheet = getOrCreateSheet();
+  const data  = sheet.getDataRange().getValues();
+
+  let registered   = 0;  // Yes only
+  let maybeCount   = 0;  // Maybe only
+  let declined     = 0;  // No only
+  const signedUpNames  = [];
+  const maybeNames     = [];
+
+  for (let i = 1; i < data.length; i++) {
+    const participation = data[i][COLS.PARTICIPATION - 1];
+    const name          = data[i][COLS.NAME - 1];
+
+    if (participation === 'Yes') {
+      registered++;
+      signedUpNames.push(name);
+    } else if (participation === 'Maybe') {
+      maybeCount++;
+      maybeNames.push(name);
+    } else if (participation === 'No') {
+      declined++;
+    }
+  }
+
+  const cfg = getSheetConfig();
+  return {
+    registered,
+    maybeCount,
+    declined,
+    open:         Math.max(0, cfg.totalSlots - registered),
+    signedUpNames,
+    maybeNames,
+    totalSlots:   cfg.totalSlots,
+  };
+}
+
+// ── Read Members tab → return sorted array of {name, email} ──
+// Includes members with Paid = X or M in current year OR previous year.
+// X = active and paid dues, M = paid dues (both qualify for the dropdown).
+// Uses the most recent qualifying year's record and email for each member.
+function getMembers() {
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(CONFIG.MEMBERS_SHEET);
+  if (!sheet) return [];
+
+  const data        = sheet.getDataRange().getValues();
+  const currentYear = new Date().getFullYear();
+  const prevYear    = currentYear - 1;
+
+  // memberMap: fullName → { email, year } — keeps highest qualifying year
+  const memberMap = {};
+
+  for (let i = 1; i < data.length; i++) {
+    const year  = parseInt(data[i][CONFIG.COL_YEAR  - 1]) || 0;
+    const paid  = (data[i][CONFIG.COL_PAID  - 1] || '').toString().trim().toUpperCase();
+    const fname = (data[i][CONFIG.COL_FNAME - 1] || '').toString().trim();
+    const lname = (data[i][CONFIG.COL_LNAME - 1] || '').toString().trim();
+    const email = (data[i][CONFIG.COL_EMAIL - 1] || '').toString().trim().toLowerCase();
+
+    if (!fname || !lname) continue;
+
+    // Only include current year or previous year
+    if (year !== currentYear && year !== prevYear) continue;
+
+    // Only include paid members (X = active/paid, M = paid)
+    if (paid !== 'X' && paid !== 'M') continue;
+
+    const fullName = `${fname} ${lname}`;
+
+    // Keep the most recent qualifying year's record
+    if (!memberMap[fullName] || year > memberMap[fullName].year) {
+      memberMap[fullName] = { email, year };
+    }
+  }
+
+  // Convert to array and sort by last name then first name
+  const members = Object.entries(memberMap).map(([name, val]) => ({
+    name:  name,
+    email: val.email,
+    year:  val.year,
+  }));
+
+  members.sort((a, b) => {
+    const aLast = a.name.split(' ').slice(-1)[0];
+    const bLast = b.name.split(' ').slice(-1)[0];
+    return aLast.localeCompare(bLast) || a.name.localeCompare(b.name);
+  });
+
+  Logger.log(`getMembers: found ${members.length} paid members (X or M) for ${prevYear}-${currentYear}`);
+  return members;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  EMAILS
+// ═══════════════════════════════════════════════════════════════════════════
+function sendMemberEmail(data, stats, cfg, isUpdate) {
+  const firstName = data.name.split(' ')[0];
+  const subject   = isUpdate
+    ? `Updated: Your ${CONFIG.LEAGUE_NAME} Response`
+    : `Confirmed: ${CONFIG.LEAGUE_NAME} Sign-Up`;
+
+  const statusLine =
+    data.participation === 'Yes'
+      ? "✅ You're registered and IN for the session!"
+      : data.participation === 'Maybe'
+      ? "🟡 You're marked as 'Maybe' — we'll follow up before the session starts to confirm your spot."
+      : "❌ You've been marked as OUT for this session.";
+
+  // Sub line — only for Yes players
+  const subLine = data.participation === 'Yes'
+    ? (data.subNeeded === 'Yes'
+        ? '\n🔄 You need a substitute on: ' + (data.subDates || 'dates not specified') + ' — the admin will follow up.'
+        : '\n✓ No substitute needed.')
+    : '';
+
+  // Avail-to-sub line — for Maybe and No players
+  const availLine = (data.participation !== 'Yes' && data.availSub === 'Yes')
+    ? '\n🙋 You are available to substitute for others — noted!'
+    : '';
+
+  // Follow-up note for Maybe players
+  const followUpNote = data.participation === 'Maybe'
+    ? '\n>> You will receive a follow-up email before the session starts asking for your final decision.'
+    : '';
+
+  const scheduleBlock = buildScheduleBlock(stats.registered);
+
+  const body = `
+Hi ${firstName},
+
+${isUpdate ? 'Your response has been updated.' : 'Thank you for responding!'}
+
+${statusLine}${subLine}${availLine}${followUpNote}
+
+─────────────────────────────
+  ${CONFIG.LEAGUE_NAME.toUpperCase()}
+  ${CONFIG.CLUB_NAME}
+─────────────────────────────
+  Season Start:   ${formatStartDate(cfg.seasonStart)}
+  Players So Far: ${stats.registered} registered
+
+  POSSIBLE END DATES
+  (Final schedule set after signup closes)
+${scheduleBlock}
+─────────────────────────────
+  Open Slots:  ${stats.open} remaining
+─────────────────────────────
+
+If you need to change your response, simply submit the form again — it will update your existing entry.
+
+See you at the tables!
+— ${CONFIG.CLUB_NAME}
+`.trim();
+
+  GmailApp.sendEmail(data.email, subject, body, {
+    name:    CONFIG.LEAGUE_NAME,
+    replyTo: 'monrovian@gmail.com',
+  });
+}
+
+// ── Build comma-separated admin recipient list ──
+// Includes clubEmail only if it is set and different from adminEmail
+function getAdminRecipients(cfg) {
+  const recipients = [cfg.adminEmail];
+  if (cfg.clubEmail && cfg.clubEmail !== cfg.adminEmail) {
+    recipients.push(cfg.clubEmail);
+  }
+  return recipients.join(',');
+}
+
+function sendAdminEmail(data, stats, cfg, isUpdate) {
+  const action        = isUpdate ? 'UPDATED' : 'NEW';
+  const subject       = `[Billiard League] ${action} Response — ${data.name} (${data.participation})`;
+  const scheduleBlock = buildScheduleBlock(stats.registered);
+
+  const maybeFlag = data.participation === 'Maybe'
+    ? '\n⚠️  MAYBE PLAYER — follow-up required before session starts' : '';
+
+  const body = `
+NEW SIGNUP RESPONSE — ${new Date().toLocaleString()}${maybeFlag}
+
+Name:          ${data.name}
+Email:         ${data.email}
+Participation: ${data.participation}
+Sub Needed:    ${data.subNeeded}
+Sub Dates:     ${data.subDates  || '—'}
+Avail to Sub:  ${data.availSub  || 'No'}
+Follow-up:     ${data.participation === 'Maybe' ? 'PENDING — contact before session starts' : '—'}
+Action:        ${isUpdate ? 'Updated existing entry' : 'New entry added'}
+
+─────────────────────────────
+CURRENT TOTALS
+─────────────────────────────
+Registered (Yes only): ${stats.registered} / ${stats.totalSlots}
+Maybe (need follow-up): ${stats.maybeCount || 0}
+Declined:    ${stats.declined}
+Open Slots:  ${stats.open}
+
+Signed Up: ${stats.signedUpNames.join(', ') || 'None yet'}
+
+─────────────────────────────
+POSSIBLE END DATES
+─────────────────────────────
+Season Start: ${formatStartDate(cfg.seasonStart)}
+${scheduleBlock}
+─────────────────────────────
+`.trim();
+
+  GmailApp.sendEmail(getAdminRecipients(cfg), subject, body);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+function jsonResponse(obj) {
+  const output = ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+  return output;
+}
+
+// CORS-enabled response — allows GitHub Pages and any browser to read the response
+function corsResponse(obj) {
+  const output = ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+  return output;
+}
+
+// JSONP — wraps response in a callback function, bypasses browser CORS
+function jsonpResponse(obj, callback) {
+  if (!callback) return corsResponse(obj);
+  const output = `${callback}(${JSON.stringify(obj)})`;
+  return ContentService
+    .createTextOutput(output)
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  SHEET HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+function getOrCreateSheet() {
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  let   sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.SHEET_NAME);
+    // Add header row
+    sheet.appendRow(['Timestamp', 'Name', 'Email', 'Participation', 'Sub Needed', 'Sub Dates', 'Avail Sub', 'Follow-up Status']);
+    sheet.getRange(1, 1, 1, 8).setFontWeight('bold').setBackground('#143d22').setFontColor('#c9a84c');
+    sheet.setFrozenRows(1);
+    sheet.setColumnWidth(1, 200);
+    sheet.setColumnWidth(2, 160);
+    sheet.setColumnWidth(3, 220);
+    sheet.setColumnWidth(4, 120);
+    sheet.setColumnWidth(5, 110);
+    sheet.setColumnWidth(6, 200);
+    sheet.setColumnWidth(7, 100);
+    sheet.setColumnWidth(8, 140);
+  }
+
+  return sheet;
+}
+
+function findExistingRow(sheet, name) {
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][COLS.NAME - 1] === name) return i + 1; // 1-indexed row number
+  }
+  return null;
+}
+
+function applyRowFormatting(sheet, row, participation) {
+  const color =
+    participation === 'Yes'   ? '#d4edda' :
+    participation === 'Maybe' ? '#fff3cd' :
+                                '#f8d7da';
+  sheet.getRange(row, 1, 1, 8).setBackground(color);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  MANUAL UTILITIES — run these from the Apps Script editor as needed
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * emailMaybes() — sends a follow-up email to all Maybe players asking for
+ * their final Yes or No decision before the session starts.
+ * Run this manually from the editor the Friday before the session opener.
+ * After running, update the Follow-up Status column (H) manually in the Sheet.
+ */
+function emailMaybes() {
+  const cfg   = getSheetConfig();
+  const sheet = getOrCreateSheet();
+  const stats = getStats();
+
+  // ── Check if league is already full — no point following up ──
+  // Full = registered (Yes only) >= totalSlots
+  if (stats.registered >= cfg.totalSlots) {
+    Logger.log('emailMaybes skipped — league is full (' +
+      stats.registered + '/' + cfg.totalSlots + ' slots filled). No follow-up needed.');
+    GmailApp.sendEmail(
+      getAdminRecipients(cfg),
+      '[Billiard League] Maybe Follow-up Skipped — League Full',
+      'The Maybe follow-up email was skipped because the league is already full.\n\n' +
+      'Registered (Yes): ' + stats.registered + ' / ' + cfg.totalSlots + '\n' +
+      'Maybe players:    ' + stats.maybeCount + '\n\n' +
+      'No action needed — the roster is complete.'
+    );
+    return;
+  }
+
+  // ── Check if there are any Maybe players to follow up with ──
+  const data   = sheet.getDataRange().getValues();
+  const maybes = [];
+  for (let i = 1; i < data.length; i++) {
+    if ((data[i][COLS.PARTICIPATION - 1] || '').toString().trim() === 'Maybe') {
+      maybes.push({
+        row:   i + 1,
+        name:  data[i][COLS.NAME  - 1],
+        email: data[i][COLS.EMAIL - 1],
       });
-      document.getElementById('err-sub-dates').classList.remove('show');
     }
   }
 
-  // ── Get selected sub dates ──
-  function getSubDates() {
-    const checked = document.querySelectorAll('input[name="sub-date"]:checked');
-    return Array.from(checked).map(function(cb) { return cb.value; });
+  if (maybes.length === 0) {
+    Logger.log('No Maybe players found — no emails sent.');
+    return;
   }
 
-  // ── Form submit ──
-  document.getElementById('signup-form').addEventListener('submit', function (e) {
-    e.preventDefault();
+  // ── How many open slots remain ──
+  const openSlots = cfg.totalSlots - stats.registered;
 
-    const nameEl  = document.getElementById('member-name');
-    const emailEl = document.getElementById('member-email');
-    let valid = true;
+  const seasonStart = formatStartDate(cfg.seasonStart);
+  let sent = 0;
 
-    // Validate name
-    if (!nameEl.value) {
-      document.getElementById('err-name').classList.add('show');
-      valid = false;
-    } else {
-      document.getElementById('err-name').classList.remove('show');
+  maybes.forEach(function(player) {
+    if (!player.email) {
+      Logger.log('Skipping ' + player.name + ' — no email address.');
+      return;
     }
 
-    // Validate email
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value);
-    if (!emailOk) {
-      document.getElementById('err-email').classList.add('show');
-      valid = false;
-    } else {
-      document.getElementById('err-email').classList.remove('show');
+    const firstName = player.name.split(' ')[0];
+    const subject   = `Action Required: ${CONFIG.LEAGUE_NAME} — Please Confirm by Tomorrow`;
+
+    const body = `
+Hi ${firstName},
+
+You previously responded "Maybe" to the ${CONFIG.LEAGUE_NAME} signup.
+
+The session starts on ${seasonStart} and we need your final decision to finalize teams.
+
+There ${openSlots === 1 ? 'is' : 'are'} currently ${openSlots} open slot${openSlots === 1 ? '' : 's'} remaining.
+
+Please visit the signup form and update your response to YES or NO by tomorrow:
+
+  https://cqr.la/CUPY
+
+─────────────────────────────
+  ${CONFIG.LEAGUE_NAME.toUpperCase()}
+  ${CONFIG.CLUB_NAME}
+─────────────────────────────
+
+If we don't hear back, we'll assume you're out for this session.
+
+Thank you!
+— ${CONFIG.CLUB_NAME}
+`.trim();
+
+    try {
+      GmailApp.sendEmail(player.email, subject, body, {
+        name:    CONFIG.LEAGUE_NAME,
+        replyTo: cfg.adminEmail,
+      });
+      sheet.getRange(player.row, COLS.FOLLOW_UP_STATUS).setValue('Follow-up Sent');
+      sent++;
+      Logger.log('Follow-up sent to: ' + player.name + ' (' + player.email + ')');
+    } catch(err) {
+      Logger.log('ERROR sending to ' + player.name + ': ' + err.message);
     }
-
-    // Validate sub dates if sub needed
-    const subDates = getSubDates();
-    if (subNeeded === 'Yes' && subDates.length === 0) {
-      document.getElementById('err-sub-dates').classList.add('show');
-      valid = false;
-    } else {
-      document.getElementById('err-sub-dates').classList.remove('show');
-    }
-
-    if (!valid) return;
-
-    // Show spinner
-    document.getElementById('spinner').style.display = 'block';
-    document.getElementById('submit-label').textContent = 'Submitting…';
-    document.getElementById('submit-btn').disabled = true;
-
-    const subDatesStr = subDates.join(', ');
-    const availSub    = document.getElementById('avail-sub') ? document.getElementById('avail-sub').value : 'No';
-
-    const payload = {
-      action:        'submit',
-      name:          nameEl.value,
-      email:         emailEl.value,
-      participation: participation,
-      subNeeded:     subNeeded,
-      subDates:      subDatesStr,
-      availSub:      availSub,
-      timestamp:     new Date().toISOString(),
-      adminEmail:    CONFIG.adminEmail,
-    };
-
-    // Submit via apiFetch
-    apiFetch('submit', {
-      name:          payload.name,
-      email:         payload.email,
-      participation: payload.participation,
-      subNeeded:     payload.subNeeded,
-      subDates:      payload.subDates,
-      availSub:      payload.availSub,
-      adminEmail:    payload.adminEmail,
-    },
-    function() {
-      showConfirmation(payload);
-      setTimeout(function() { loadStats(); }, 2500);
-    },
-    function() {
-      showConfirmation(payload, true);
-    });
   });
 
-  function showConfirmation(data, offline = false) {
-    document.getElementById('spinner').style.display = 'none';
-    document.getElementById('submit-label').textContent = 'Response Submitted';
+  // ── Admin summary to both admins ──
+  const summary = maybes.map(function(p) { return '  • ' + p.name + ' <' + p.email + '>'; }).join('\n');
+  GmailApp.sendEmail(
+    getAdminRecipients(cfg),
+    '[Billiard League] Follow-up emails sent to ' + sent + ' Maybe player(s)',
+    'The Maybe follow-up emails have been sent.\n\n' +
+    'Open slots remaining: ' + openSlots + ' / ' + cfg.totalSlots + '\n\n' +
+    'Players contacted:\n' + summary +
+    '\n\nPlease update their Follow-up Status in the Signups sheet after they respond.\n' +
+    'Values: Confirmed Yes / Confirmed No'
+  );
 
-    const conf = document.getElementById('confirmation');
-    const icon = data.participation === 'No' ? '\u2715' : '\u2713';
-    const verb = data.participation === 'Yes' ? "you're registered!" :
-                 data.participation === 'Maybe' ? "response received \u2014 we'll follow up before the session starts." : "you're marked as out.";
+  Logger.log('emailMaybes complete — ' + sent + ' of ' + maybes.length + ' emails sent. Open slots: ' + openSlots);
+}
 
-    const subLine = (data.subNeeded === 'Yes' && data.subDates)
-      ? '\nSub needed: ' + data.subDates : '';
-    const availLine = (data.participation !== 'Yes' && data.availSub === 'Yes')
-      ? '\nAvailable to sub for others: Yes' : '';
+/** Run this manually to export current Signups tab to an Excel-compatible CSV */
+function exportToCsv() {
+  const sheet = getOrCreateSheet();
+  const data  = sheet.getDataRange().getValues();
+  let csv = data.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 
-    document.getElementById('conf-headline').textContent = `${icon}  ${data.name} \u2014 ${verb}`;
-    document.getElementById('conf-message').textContent  =
-      `A confirmation will be sent to ${data.email}.${subLine}${availLine}` +
-      (offline ? ' (Note: connect the Apps Script URL to enable emails.)' : '');
+  const file = DriveApp.createFile(
+    `Billiard_Signups_${new Date().toLocaleDateString('en-US').replace(/\//g,'-')}.csv`,
+    csv,
+    MimeType.CSV
+  );
 
-    conf.classList.add('show');
+  Logger.log('CSV created: ' + file.getUrl());
+  return file.getUrl();
+}
 
-    // ── Auto-reset after 5 seconds for next signup ──
-    let countdown = 5;
-    const submitBtn = document.getElementById('submit-btn');
-    submitBtn.disabled = true;
+/** Run this to email yourself the current roster as CSV */
+function emailRoster() {
+  const cfg   = getSheetConfig();
+  const sheet = getOrCreateSheet();
+  const data  = sheet.getDataRange().getValues();
+  let csv = data.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 
-    const timer = setInterval(function() {
-      countdown--;
-      document.getElementById('submit-label').textContent =
-        'Next signup in ' + countdown + 's\u2026';
-      if (countdown <= 0) {
-        clearInterval(timer);
-        resetForm();
+  const blob = Utilities.newBlob(csv, MimeType.CSV,
+    `Billiard_Signups_${new Date().toLocaleDateString('en-US').replace(/\//g,'-')}.csv`);
+
+  GmailApp.sendEmail(
+    getAdminRecipients(cfg),
+    '[Billiard League] Current Signup Roster',
+    `Attached is the current signup roster as of ${new Date().toLocaleString()}.`,
+    { attachments: [blob] }
+  );
+
+  Logger.log('Roster emailed to: ' + getAdminRecipients(cfg));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  TRIGGER MANAGEMENT
+//  Run setupMaybeFollowUpTrigger() once after each new session is configured
+//  in the Config tab. It schedules emailMaybes() to run automatically
+//  4 days before the session start date (e.g. session starts 04-28 → trigger
+//  fires 04-24 at 8:00 AM Eastern).
+//
+//  Run removeMaybeFollowUpTrigger() at end of session to clean up.
+//  Safe to run setupMaybeFollowUpTrigger() again next session — it removes
+//  any existing trigger first to avoid duplicates.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * setupMaybeFollowUpTrigger()
+ * Run this ONCE from the editor after setting the session start date
+ * in the Config tab. Creates a time-based trigger that fires emailMaybes()
+ * exactly 4 days before the session start at 8:00 AM Eastern.
+ */
+function setupMaybeFollowUpTrigger() {
+  const cfg = getSheetConfig();
+
+  // ── Calculate trigger date from Config tab ──
+  const days  = cfg.followupDays || 4;
+  const parts = cfg.seasonStart.split('-');
+  const seasonStart = new Date(
+    parseInt(parts[0]),
+    parseInt(parts[1]) - 1,
+    parseInt(parts[2]),
+    8, 0, 0  // 8:00 AM
+  );
+
+  const triggerDate = new Date(seasonStart);
+  triggerDate.setDate(seasonStart.getDate() - days);
+
+  // ── Validate trigger date is in the future ──
+  if (triggerDate <= new Date()) {
+    Logger.log('WARNING: Trigger date ' + triggerDate.toDateString() +
+      ' is in the past. Update Season Start or Followup Days in Config tab and run again.');
+    return;
+  }
+
+  // ── Remove any existing emailMaybes trigger to avoid duplicates ──
+  removeMaybeFollowUpTrigger();
+
+  // ── Create the new trigger ──
+  ScriptApp.newTrigger('emailMaybes')
+    .timeBased()
+    .at(triggerDate)
+    .create();
+
+  // ── Confirm to both admins ──
+  const msg =
+    'The Maybe follow-up email trigger has been set.\n\n' +
+    'emailMaybes() will run automatically on: ' + triggerDate.toDateString() + ' at 8:00 AM\n' +
+    'Season start date: ' + cfg.seasonStart + '\n' +
+    'Follow-up days before start: ' + days + '\n\n' +
+    'Note: If the league is full when the trigger fires, the follow-up emails\n' +
+    'will be skipped automatically and you will be notified.\n\n' +
+    'To cancel this trigger, run removeMaybeFollowUpTrigger() from the Apps Script editor.\n' +
+    'To change the timing, update "Followup Days" in the Config tab and run setupMaybeFollowUpTrigger() again.';
+
+  GmailApp.sendEmail(
+    getAdminRecipients(cfg),
+    '[Billiard League] Maybe Follow-up Trigger Set — ' + triggerDate.toDateString(),
+    msg
+  );
+
+  Logger.log('Trigger set: emailMaybes() will run on ' + triggerDate.toDateString() +
+    ' (' + days + ' days before season start ' + cfg.seasonStart + ')');
+}
+
+/**
+ * removeMaybeFollowUpTrigger()
+ * Removes all existing emailMaybes triggers.
+ * Run at end of session or before resetting for a new session.
+ */
+function removeMaybeFollowUpTrigger() {
+  const triggers = ScriptApp.getProjectTriggers();
+  let removed = 0;
+  triggers.forEach(function(trigger) {
+    if (trigger.getHandlerFunction() === 'emailMaybes') {
+      ScriptApp.deleteTrigger(trigger);
+      removed++;
+    }
+  });
+  Logger.log(removed > 0
+    ? 'Removed ' + removed + ' emailMaybes trigger(s).'
+    : 'No emailMaybes triggers found to remove.');
+}
+
+/**
+ * listTriggers()
+ * Lists all active project triggers in the Execution log.
+ * Run to confirm the trigger is set correctly.
+ */
+function listTriggers() {
+  const triggers = ScriptApp.getProjectTriggers();
+  if (triggers.length === 0) {
+    Logger.log('No active triggers.');
+    return;
+  }
+  triggers.forEach(function(trigger) {
+    Logger.log(
+      'Function: ' + trigger.getHandlerFunction() +
+      ' | Type: '  + trigger.getEventType() +
+      ' | Source: ' + trigger.getTriggerSource()
+    );
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  TEST WRAPPER
+//  Run testMaybeFollowUp() from the editor to safely test emailMaybes()
+//  without affecting the real data or the production trigger.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * testMaybeFollowUp()
+ * Safe test wrapper for emailMaybes(). Runs three scenario checks and
+ * reports results to the Execution log and both admin emails.
+ *
+ * Scenario A — Full league check:
+ *   Temporarily sets totalSlots to current registered count, runs
+ *   emailMaybes(), confirms skip logic fires, restores totalSlots.
+ *
+ * Scenario B — Live run with real Maybe players:
+ *   Runs emailMaybes() with real data. Maybe players receive follow-up
+ *   emails. Follow-up Status updated in sheet. Use only when you want
+ *   to actually contact Maybe players.
+ *
+ * Scenario C — Trigger timing check:
+ *   Sets a test trigger 3 minutes from now, confirms it appears in
+ *   listTriggers(), then removes it and restores the real Apr 24 trigger.
+ *
+ * Pass the scenario letter as argument, e.g. testMaybeFollowUp('A')
+ * Default (no argument) runs Scenario A only — safe, no emails to players.
+ */
+function testMaybeFollowUp(scenario) {
+  const cfg    = getSheetConfig();
+  const stats  = getStats();
+  scenario     = (scenario || 'A').toString().toUpperCase();
+
+  Logger.log('═══ testMaybeFollowUp — Scenario ' + scenario + ' ═══');
+
+  // ── SCENARIO A — Full league skip logic ──
+  if (scenario === 'A') {
+    Logger.log('Scenario A: Testing full-league skip logic...');
+    Logger.log('Current registered (Yes): ' + stats.registered);
+    Logger.log('Current totalSlots: ' + cfg.totalSlots);
+
+    // Temporarily override totalSlots to trigger the full-league check
+    const ss    = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(CONFIG.CONFIG_SHEET);
+    const data  = sheet.getDataRange().getValues();
+    let slotsRow = -1;
+    for (let i = 0; i < data.length; i++) {
+      if ((data[i][0] || '').toString().trim().toLowerCase() === 'total_slots' ||
+          (data[i][0] || '').toString().trim().toLowerCase() === 'total slots') {
+        slotsRow = i + 1;
+        break;
       }
-    }, 1000);
+    }
+
+    if (slotsRow > 0) {
+      const originalSlots = sheet.getRange(slotsRow, 2).getValue();
+      sheet.getRange(slotsRow, 2).setValue(stats.registered); // fill to exact registered count
+      Logger.log('Temporarily set Total Slots to ' + stats.registered + ' to test skip logic...');
+
+      emailMaybes(); // Should skip and notify admins
+
+      sheet.getRange(slotsRow, 2).setValue(originalSlots); // restore
+      Logger.log('✅ Total Slots restored to ' + originalSlots);
+      Logger.log('✅ Scenario A complete — check both inboxes for skip notification.');
+    } else {
+      Logger.log('ERROR: Could not find Total Slots row in Config tab.');
+    }
   }
 
-  function resetForm() {
-    // Hide confirmation box
-    document.getElementById('confirmation').classList.remove('show');
-
-    // Reset dropdown and email
-    document.getElementById('member-name').value  = '';
-    document.getElementById('member-email').value = '';
-    document.getElementById('member-name').disabled  = false;
-    document.getElementById('member-email').disabled = false;
-
-    // Reset participation to Yes
-    setParticipation('Yes');
-    setSub('No');
-    setAvailSub('No');
-
-    // Re-enable submit button
-    const submitBtn = document.getElementById('submit-btn');
-    submitBtn.disabled = false;
-    document.getElementById('submit-label').textContent = 'Submit My Response';
-    document.getElementById('spinner').style.display = 'none';
-
-    // Re-enable all toggle and sub buttons
-    document.querySelectorAll('.toggle-btn, .sub-btn').forEach(function(btn) {
-      btn.disabled = false;
-      btn.style.cursor = '';
-      btn.style.opacity = '';
-    });
-
-    // Uncheck all sub-date checkboxes
-    document.querySelectorAll('input[name="sub-date"]').forEach(function(cb) {
-      cb.checked  = false;
-      cb.disabled = false;
-    });
-
-    // Scroll back to top of form
-    document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // ── SCENARIO B — Live run with real Maybe players ──
+  else if (scenario === 'B') {
+    Logger.log('Scenario B: Live run — will email real Maybe players...');
+    Logger.log('Maybe players found: ' + stats.maybeCount);
+    if (stats.maybeCount === 0) {
+      Logger.log('No Maybe players in sheet — nothing to send.');
+      return;
+    }
+    emailMaybes();
+    Logger.log('✅ Scenario B complete — check inboxes and Follow-up Status column H.');
   }
 
-  // ── Initialize form state ──
-  // Ensures sub-section and avail-sub-section are correctly shown/hidden
-  // on first load, back-navigation, or browser cache restore
-  setParticipation('Yes');
+  // ── SCENARIO C — Trigger timing test ──
+  else if (scenario === 'C') {
+    Logger.log('Scenario C: Testing trigger timing — fires in 3 minutes...');
 
-</script>
+    // Remove real trigger temporarily
+    removeMaybeFollowUpTrigger();
 
+    // Set test trigger 3 minutes from now
+    const testDate = new Date(new Date().getTime() + 3 * 60 * 1000);
+    ScriptApp.newTrigger('emailMaybes')
+      .timeBased()
+      .at(testDate)
+      .create();
+    Logger.log('Test trigger set for: ' + testDate.toLocaleTimeString());
+    Logger.log('Waiting... emailMaybes() will fire automatically in ~3 minutes.');
+    Logger.log('After it fires, run setupMaybeFollowUpTrigger() to restore the Apr 24 trigger.');
+
+    // List current triggers so you can confirm
+    listTriggers();
+
+    GmailApp.sendEmail(
+      getAdminRecipients(cfg),
+      '[Billiard League TEST] Trigger timing test — fires at ' + testDate.toLocaleTimeString(),
+      'A test trigger has been set to fire emailMaybes() at ' + testDate.toLocaleString() + '.\n\n' +
+      'After it fires, run setupMaybeFollowUpTrigger() to restore the real Apr 24 trigger.\n\n' +
+      'This was sent by testMaybeFollowUp("C").'
+    );
+    Logger.log('✅ Scenario C setup complete — watch for emailMaybes() to fire in 3 min.');
+  }
+
+  else {
+    Logger.log('Unknown scenario "' + scenario + '". Use A, B, or C.');
+  }
+
+  Logger.log('═══ testMaybeFollowUp complete ═══');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  CONFIG TAB ADMIN BUTTONS
+//  Run addAdminButtons() once to add clickable buttons to the Config tab.
+//  Each button calls a key admin function directly from the sheet.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * addAdminButtons()
+ * Adds a set of admin action buttons to the Config tab.
+ * Run once from the editor. Safe to re-run — removes old buttons first.
+ */
+function addAdminButtons() {
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(CONFIG.CONFIG_SHEET);
+  if (!sheet) {
+    Logger.log('Config tab not found.');
+    return;
+  }
+
+  // ── Remove any existing drawings ──
+  sheet.getDrawings().forEach(function(d) { d.remove(); });
+
+  // ── Button definitions ──
+  // Each button: { label, functionName, col, row, color }
+  const buttons = [
+    { label: '▶ Setup Follow-up Trigger',  fn: 'setupMaybeFollowUpTrigger', col: 4, row: 2,  color: '#143d22' },
+    { label: '✉ Email Maybe Players Now',  fn: 'emailMaybes',               col: 4, row: 4,  color: '#c9a84c' },
+    { label: '✉ Email Roster (CSV)',        fn: 'emailRoster',               col: 4, row: 6,  color: '#1a6b3c' },
+    { label: '🔍 List Active Triggers',     fn: 'listTriggers',              col: 4, row: 8,  color: '#555555' },
+    { label: '✕ Remove Follow-up Trigger', fn: 'removeMaybeFollowUpTrigger',col: 4, row: 10, color: '#8b0000' },
+    { label: '🧪 Test: Scenario A (safe)', fn: 'runTestScenarioA',          col: 4, row: 12, color: '#2c5f8a' },
+  ];
+
+  buttons.forEach(function(btn) {
+    const drawing = sheet.newChart()
+      .asColumnChart()
+      .build();
+
+    // Use a Button image workaround via insertButton
+    // Apps Script supports drawings with macros via overGridImage
+    const anchor = sheet.getRange(btn.row, btn.col);
+    SpreadsheetApp.flush();
+  });
+
+  // ── Use the correct API: insertButton via macro-assigned drawing ──
+  // Apps Script doesn't have a direct insertButton API —
+  // we use a checkbox + onEdit trigger approach instead
+  addButtonsViaCheckboxes(sheet);
+}
+
+/**
+ * addButtonsViaCheckboxes()
+ * Adds admin controls to the Config tab using checkboxes with labels.
+ * Checking a box triggers the corresponding admin function via onEdit.
+ * Much more reliable than drawings in Apps Script.
+ */
+function addButtonsViaCheckboxes(sheet) {
+  // Allow calling directly from editor with no argument
+  if (!sheet) {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    sheet    = ss.getSheetByName(CONFIG.CONFIG_SHEET);
+    if (!sheet) {
+      Logger.log('ERROR: Config tab not found. Run createConfigTab() first.');
+      return;
+    }
+  }
+  // ── Clear any existing button area (cols D-F, rows 1-15) ──
+  sheet.getRange('D1:F15').clear();
+
+  // ── Header ──
+  sheet.getRange('D1').setValue('ADMIN ACTIONS')
+    .setFontWeight('bold')
+    .setBackground('#143d22')
+    .setFontColor('#c9a84c')
+    .setFontSize(11);
+  sheet.getRange('D1:E1').merge();
+  sheet.setColumnWidth(4, 30);   // col D — checkbox
+  sheet.setColumnWidth(5, 220);  // col E — label
+
+  // ── Button rows: [row, label, functionName] ──
+  const actions = [
+    [2,  'Setup Follow-up Trigger',    'setupMaybeFollowUpTrigger' ],
+    [3,  'Email Maybe Players Now',    'emailMaybes'               ],
+    [4,  'Email Roster (CSV)',          'emailRoster'               ],
+    [5,  'List Active Triggers',        'listTriggers'              ],
+    [6,  'Remove Follow-up Trigger',   'removeMaybeFollowUpTrigger'],
+    [7,  'Test: Scenario A (safe)',     'runTestScenarioA'          ],
+    [8,  'Test: Scenario B (live)',     'runTestScenarioB'          ],
+    [9,  'Test: Scenario C (trigger)',  'runTestScenarioC'          ],
+    [10, '📣 Announcement → use menu ↑',  'sendAnnouncementEmail'    ],
+  ];
+
+  actions.forEach(function(action) {
+    const row = action[0], label = action[1];
+    // Checkbox in col D
+    sheet.getRange(row, 4).insertCheckboxes().setValue(false);
+    // Label in col E
+    sheet.getRange(row, 5).setValue(label)
+      .setFontSize(10)
+      .setVerticalAlignment('middle');
+    // Store function name in col F (hidden — used by onEdit)
+    sheet.getRange(row, 6).setValue(action[2]);
+  });
+
+  // Hide col F
+  sheet.hideColumns(6);
+
+  // Note in col E row 11
+  sheet.getRange(11, 5).setValue('← Check a box to run')
+    .setFontColor('#888888')
+    .setFontStyle('italic')
+    .setFontSize(9);
+
+  Logger.log('Admin buttons added to Config tab. Check any box to run that function.');
+  Logger.log('NOTE: You must also install the onEdit trigger — run installOnEditTrigger() once.');
+}
+
+/**
+ * installOnEditTrigger()
+ * Run ONCE to install the onEdit trigger that watches the Config tab
+ * checkboxes and fires the corresponding admin function.
+ */
+function installOnEditTrigger() {
+  // Remove existing onEdit triggers to avoid duplicates
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === 'onConfigCheckbox') {
+      ScriptApp.deleteTrigger(t);
+    }
+  });
+
+  ScriptApp.newTrigger('onConfigCheckbox')
+    .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
+    .onEdit()
+    .create();
+
+  Logger.log('onEdit trigger installed — Config tab buttons are now active.');
+}
+
+/**
+ * onConfigCheckbox(e)
+ * Fires when any cell is edited. Checks if it was a Config tab
+ * checkbox being checked, and if so runs the associated function.
+ */
+function onConfigCheckbox(e) {
+  if (!e) return;
+  const sheet = e.source.getActiveSheet();
+  if (sheet.getName() !== CONFIG.CONFIG_SHEET) return;
+
+  const range = e.range;
+  const col   = range.getColumn();
+  const row   = range.getRow();
+  const value = range.getValue();
+
+  // Only act on col D checkboxes being checked (true)
+  if (col !== 4 || value !== true) return;
+
+  // Get the function name from col F (hidden)
+  const fnName = sheet.getRange(row, 6).getValue();
+  if (!fnName) return;
+
+  // Uncheck the box immediately
+  range.setValue(false);
+
+  // Run the function
+  Logger.log('Config tab button pressed: ' + fnName);
+  try {
+    const fn = eval(fnName); // eslint-disable-line no-eval
+    if (typeof fn === 'function') {
+      fn();
+    }
+  } catch(err) {
+    Logger.log('Error running ' + fnName + ': ' + err.message);
+  }
+}
+
+// ── Scenario convenience wrappers (for button labels) ──
+function runTestScenarioA() { testMaybeFollowUp('A'); }
+function runTestScenarioB() { testMaybeFollowUp('B'); }
+function runTestScenarioC() { testMaybeFollowUp('C'); }
+
+// ════════════════════════════════════════════════════════════════
+//  sendAnnouncementEmail()
+//  Opens a confirmation dialog showing recipient count and a
+//  live-editable message preview. Admin can modify the text,
+//  then click Send or Cancel. Nothing goes out until confirmed.
+// ════════════════════════════════════════════════════════════════
+function sendAnnouncementEmail() {
+  const cfg    = getSheetConfig();
+  const ss     = SpreadsheetApp.getActiveSpreadsheet();
+  const mSheet = ss.getSheetByName(CONFIG.MEMBERS_SHEET);
+
+  if (!mSheet) {
+    SpreadsheetApp.getUi().alert('ERROR: Members tab not found.');
+    return;
+  }
+
+  // ── Build member list (same filter as getMembers) ──
+  const data      = mSheet.getDataRange().getValues();
+  const thisYear  = new Date().getFullYear();
+  const prevYear  = thisYear - 1;
+  const memberMap = {};
+
+  data.forEach(function(row) {
+    const year  = parseInt(row[CONFIG.COL_YEAR  - 1], 10);
+    const paid  = String(row[CONFIG.COL_PAID  - 1]).trim().toUpperCase();
+    const fname = String(row[CONFIG.COL_FNAME - 1]).trim();
+    const lname = String(row[CONFIG.COL_LNAME - 1]).trim();
+    const email = String(row[CONFIG.COL_EMAIL - 1]).trim().toLowerCase();
+    if (!email || !fname || !lname) return;
+    if (paid !== 'X' && paid !== 'M') return;
+    if (year !== thisYear && year !== prevYear) return;
+    if (!memberMap[email] || year > memberMap[email].year) {
+      memberMap[email] = { fname, lname, email, year };
+    }
+  });
+
+  const members    = Object.values(memberMap);
+  const count      = members.length;
+  const adminEmail = cfg.adminEmail || 'monrovian@gmail.com';
+  const seasonDate = cfg.seasonStart
+    ? Utilities.formatDate(new Date(cfg.seasonStart + 'T12:00:00'),
+        Session.getScriptTimeZone(), 'MMMM d, yyyy')
+    : 'session start date';
+  const totalSlots = cfg.totalSlots || 24;
+  const signupLink = 'https://cqr.la/CUPY';
+
+  // ── Default message body (editable in dialog) ──
+  const defaultBody =
+    "The Tuesday Night Men\u2019s Billiard League is gearing up for another great session \u2014 " +
+    "and we\u2019d love to have you back at the table.\n\n" +
+    "Signups are now open and this session we\u2019ve made it easier than ever. A new online form " +
+    "lets you register in under 60 seconds from your phone, tablet, or computer. " +
+    "Select your name, confirm your participation, and you\u2019re done \u2014 " +
+    "a confirmation email arrives instantly.\n\n" +
+    ">> Sign up here: " + signupLink + "\n\n" +
+    "A few things worth knowing:\n" +
+    "  \u2022 Session opens " + seasonDate + "\n" +
+    "  \u2022 " + totalSlots + " player slots available\n" +
+    "  \u2022 Not sure yet? Choose \u201cMaybe\u201d on the form \u2014 we\u2019ll follow up before the session starts\n" +
+    "  \u2022 Can\u2019t commit but willing to sub? Let us know on the form \u2014 it\u2019s a big help to the league\n\n" +
+    "Early signups help us plan the schedule, so the sooner the better. " +
+    "That said, take your time \u2014 we just wanted to make sure you had the link.\n\n" +
+    "Hope to see you there.\n\n" +
+    "Chuck Fingerman\n" +
+    "League Administrator\n" +
+    "Spruce Creek Golf & Country Club \u2014 Tuesday Night Men\u2019s Billiard League";
+
+  // ── Store members in Script Properties so dialog can access them ──
+  PropertiesService.getScriptProperties().setProperty(
+    'ANNOUNCEMENT_MEMBERS', JSON.stringify(members)
+  );
+
+  // ── Build the HTML dialog ──
+  const html = HtmlService.createHtmlOutput(`
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 13px; color: #222; background: #f8f8f6; }
+    .header { background: #143d22; color: #c9a84c; padding: 14px 18px; font-size: 15px; font-weight: bold; }
+    .body { padding: 16px 18px; }
+    .info-bar { background: #e8f5ee; border: 1px solid #b8dfc8; border-radius: 6px;
+                padding: 10px 14px; margin-bottom: 14px; font-size: 13px; color: #1e5c34; }
+    .info-bar strong { font-size: 15px; }
+    label { display: block; font-weight: bold; color: #143d22; margin-bottom: 6px; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; }
+    input[type=text] { width: 100%; padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px;
+                       font-size: 13px; margin-bottom: 14px; }
+    textarea { width: 100%; height: 280px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;
+               font-size: 12px; font-family: 'Courier New', monospace; line-height: 1.5;
+               resize: vertical; margin-bottom: 6px; }
+    .hint { font-size: 11px; color: #888; margin-bottom: 14px; }
+    .salutation { background: #fffbe6; border: 1px solid #e8d88a; border-radius: 4px;
+                  padding: 8px 12px; margin-bottom: 14px; font-size: 12px; color: #7a6a00; }
+    .buttons { display: flex; gap: 10px; justify-content: flex-end; padding-top: 6px;
+               border-top: 1px solid #e0e0e0; margin-top: 4px; }
+    .btn { padding: 9px 22px; border: none; border-radius: 5px; font-size: 13px;
+           font-weight: bold; cursor: pointer; }
+    .btn-cancel { background: #e0e0e0; color: #444; }
+    .btn-cancel:hover { background: #cccccc; }
+    .btn-send { background: #143d22; color: #c9a84c; }
+    .btn-send:hover { background: #1e5c34; }
+    .btn-send:disabled { background: #999; color: #ccc; cursor: not-allowed; }
+    .sending { color: #1e5c34; font-style: italic; font-size: 12px; display: none; }
+    .test-bar { background: #fffbe6; border: 1px solid #e8d88a; border-radius: 6px;
+                padding: 10px 14px; margin-bottom: 14px; }
+    .test-label { display: flex; align-items: flex-start; gap: 8px; cursor: pointer;
+                  font-size: 12px; color: #5a4a00; line-height: 1.5; }
+    .test-label input { margin-top: 2px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="header">📣 Send Session Announcement Email</div>
+  <div class="body">
+    <div class="info-bar">
+      This will send to <strong>${count} active members</strong> (Paid = X or M).
+      Review and edit below before sending.
+    </div>
+
+    <label>Subject Line</label>
+    <input type="text" id="subject"
+      value="Tuesday Night Billiard League \u2014 Session Signups Are Open!" />
+
+    <div class="salutation">
+      ✉ Each email will open with <strong>"Hi [First Name],"</strong> — personalised automatically.
+    </div>
+
+    <label>Message Body</label>
+    <textarea id="body">${defaultBody.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+    <div class="hint">Edit freely. The "Hi [Name]," salutation and your sign-off are included above.</div>
+
+    <label>Image (optional)</label>
+    <input type="text" id="imageRef"
+      placeholder="Paste a Google Drive share link or an https:// image URL" />
+    <div class="hint">Shown at the top of the message. Drive file: right-click &rarr; Share &rarr; copy link. Leave blank for no image.</div>
+
+    <div class="test-bar">
+      <label class="test-label">
+        <input type="checkbox" id="testMode" onchange="toggleTestMode()" />
+        🧪 <strong>Test mode</strong> — send only to me (${adminEmail}) to preview before sending to all members
+      </label>
+    </div>
+
+    <div class="buttons">
+      <span class="sending" id="sending-msg">⏳ Sending — please wait…</span>
+      <button class="btn btn-cancel" onclick="cancel()">✕ Cancel</button>
+      <button class="btn btn-send" id="sendBtn" onclick="send()">✉ Send to ${count} Members</button>
+    </div>
+  </div>
+
+  <script>
+    function toggleTestMode() {
+      const test = document.getElementById('testMode').checked;
+      const btn  = document.getElementById('sendBtn');
+      btn.textContent = test
+        ? '🧪 Send Test to Me Only'
+        : '✉ Send to ${count} Members';
+      btn.style.background = test ? '#8b6914' : '#143d22';
+    }
+    function cancel() {
+      google.script.run.cancelAnnouncement();
+      google.script.host.close();
+    }
+    function send() {
+      const subject  = document.getElementById('subject').value.trim();
+      const body     = document.getElementById('body').value;
+      const testMode = document.getElementById('testMode').checked;
+      const imageRef = document.getElementById('imageRef').value.trim();
+      if (!subject || !body) {
+        alert('Subject and message body cannot be empty.');
+        return;
+      }
+      document.getElementById('sendBtn').disabled = true;
+      document.getElementById('sending-msg').style.display = 'inline';
+      google.script.run
+        .withSuccessHandler(function(result) {
+          google.script.host.close();
+          google.script.run.showAnnouncementResult(result);
+        })
+        .withFailureHandler(function(err) {
+          alert('Error: ' + err.message);
+          document.getElementById('sendBtn').disabled = false;
+          document.getElementById('sending-msg').style.display = 'none';
+        })
+        .doSendAnnouncement(subject, body, testMode, imageRef);
+    }
+  </script>
 </body>
-</html>
+</html>`)
+    .setWidth(620)
+    .setHeight(680)
+    .setTitle('Send Session Announcement');
+
+  SpreadsheetApp.getUi().showModalDialog(html, 'Send Session Announcement');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  buildAnnouncementHtml(fname, body, seasonDate, totalSlots, signupLink)
+//  Returns a fully styled HTML email string in SCGCC green/gold theme.
+// ════════════════════════════════════════════════════════════════
+function buildAnnouncementHtml(fname, body, seasonDate, totalSlots, signupLink, imgSrc) {
+  const imgRow = imgSrc
+    ? '<tr><td style="background:#143d22;padding:24px 36px 0;text-align:center;">' +
+      '<img src="' + imgSrc + '" alt="Billiard League" width="528" ' +
+      'style="display:block;width:100%;max-width:528px;height:auto;margin:0 auto;border-radius:8px;border:0;" />' +
+      '</td></tr>'
+    : '';
+  // Convert plain text body to HTML paragraphs
+  const bodyHtml = body
+    .split('\n\n')
+    .map(function(p) {
+      const trimmed = p.trim();
+      if (!trimmed) return '';
+      // Bullet lines — convert to styled list
+      if (trimmed.indexOf('\u2022') !== -1 || trimmed.indexOf('  \u2022') !== -1) {
+        const items = trimmed.split('\n')
+          .filter(function(l) { return l.trim(); })
+          .map(function(l) {
+            return '<li style="margin-bottom:8px;color:#e8f5ee;">' +
+              l.replace(/^\s*\u2022\s*/, '').trim() + '</li>';
+          }).join('');
+        return '<ul style="margin:0 0 16px 0;padding-left:20px;">' + items + '</ul>';
+      }
+      // Sign-off block
+      if (trimmed.indexOf('Chuck Fingerman') !== -1) {
+        return '<p style="margin:0 0 4px 0;color:#c9a84c;font-weight:bold;">' +
+          trimmed.replace(/\n/g, '<br>') + '</p>';
+      }
+      return '<p style="margin:0 0 16px 0;color:#e8f5ee;line-height:1.7;">' +
+        trimmed.replace(/\n/g, '<br>') + '</p>';
+    }).join('')
+    // Make links stand out: bold bright yellow, underlined (Gmail default blue is unreadable on green)
+    .replace(/(https?:\/\/[^\s<]+)/g,
+      '<a href="$1" style="color:#ffd84d;font-weight:bold;text-decoration:underline;">$1</a>');
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0d2b18;font-family:Georgia,serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0d2b18;padding:30px 0;">
+  <tr><td align="center">
+  <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+    <!-- HEADER -->
+    <tr><td style="background:#143d22;border-radius:12px 12px 0 0;padding:0;overflow:hidden;">
+      <!-- Gold top bar -->
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="background:#c9a84c;height:6px;font-size:0;">&nbsp;</td></tr>
+      </table>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding:28px 36px 10px;">
+            <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;
+               letter-spacing:3px;color:#c9a84c;text-transform:uppercase;">
+              Spruce Creek Golf &amp; Country Club</p>
+            <h1 style="margin:0;font-size:28px;color:#ffffff;line-height:1.2;font-family:Georgia,serif;">
+              Tuesday Night Men&rsquo;s<br>Billiard Session</h1>
+          </td>
+          <!-- Billiard balls decoration -->
+          <td style="padding:20px 36px 10px;text-align:right;vertical-align:top;">
+            <table cellpadding="0" cellspacing="0" align="right" style="margin-top:14px;"><tr><td style="background:#c9a84c;width:60px;height:4px;font-size:0;line-height:0;">&nbsp;</td></tr></table>
+          </td>
+        </tr>
+        <tr><td colspan="2" style="padding:0 36px 24px;">
+          <p style="margin:0;font-size:18px;color:#c9a84c;font-style:italic;font-family:Georgia,serif;">
+            Session Signup &mdash; Now Open!</p>
+        </td></tr>
+      </table>
+    </td></tr>
+
+    <!-- HERO BANNER -->
+    <tr><td style="background:#1e5c34;padding:20px 36px;border-left:4px solid #c9a84c;">
+      <p style="margin:0;font-size:22px;color:#ffffff;font-family:Georgia,serif;">
+        Hi ${fname},</p>
+    </td></tr>
+
+    <!-- BODY -->
+    ${imgRow}
+    <tr><td style="background:#143d22;padding:28px 36px;">
+      ${bodyHtml}
+    </td></tr>
+
+    <!-- CTA BUTTON -->
+    <tr><td style="background:#143d22;padding:0 36px 32px;text-align:center;">
+      <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+        <tr><td style="background:#c9a84c;border-radius:8px;padding:0;">
+          <a href="${signupLink}"
+             style="display:inline-block;padding:16px 40px;font-family:Arial,sans-serif;
+                    font-size:16px;font-weight:bold;color:#143d22;text-decoration:none;
+                    letter-spacing:0.5px;">
+            &#9658;&nbsp; Sign Up Now
+          </a>
+        </td></tr>
+      </table>
+      <p style="margin:14px 0 0 0;font-family:Arial,sans-serif;font-size:12px;color:#7aab8a;">
+        Or visit: <a href="${signupLink}" style="color:#c9a84c;">${signupLink}</a></p>
+    </td></tr>
+
+    <!-- DETAILS STRIP -->
+    <tr><td style="background:#0f2e1a;padding:20px 36px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="33%" style="text-align:center;padding:10px;">
+            <p style="margin:0 0 4px 0;font-size:20px;">&nbsp;</p>
+            <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:10px;
+               letter-spacing:2px;color:#c9a84c;text-transform:uppercase;">Opens</p>
+            <p style="margin:0;font-family:Georgia,serif;font-size:14px;color:#ffffff;">${seasonDate}</p>
+          </td>
+          <td width="1" style="background:#2a5a38;">&nbsp;</td>
+          <td width="33%" style="text-align:center;padding:10px;">
+            <p style="margin:0 0 4px 0;font-size:20px;">&nbsp;</p>
+            <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:10px;
+               letter-spacing:2px;color:#c9a84c;text-transform:uppercase;">Slots</p>
+            <p style="margin:0;font-family:Georgia,serif;font-size:14px;color:#ffffff;">${totalSlots} Players</p>
+          </td>
+          <td width="1" style="background:#2a5a38;">&nbsp;</td>
+          <td width="33%" style="text-align:center;padding:10px;">
+            <p style="margin:0 0 4px 0;font-size:20px;">&nbsp;</p>
+            <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:10px;
+               letter-spacing:2px;color:#c9a84c;text-transform:uppercase;">Time to signup</p>
+            <p style="margin:0;font-family:Georgia,serif;font-size:14px;color:#ffffff;">Under 60 seconds</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+
+    <!-- FOOTER -->
+    <tr><td style="background:#0a1f10;border-radius:0 0 12px 12px;padding:20px 36px;text-align:center;">
+      <!-- Gold bottom bar -->
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+        <tr><td style="background:#c9a84c;height:3px;font-size:0;">&nbsp;</td></tr>
+      </table>
+      <p style="margin:0 0 4px 0;font-family:Arial,sans-serif;font-size:11px;color:#7aab8a;">
+        Spruce Creek Golf &amp; Country Club &mdash; Tuesday Night Men&rsquo;s Billiard League</p>
+      <p style="margin:0;font-family:Arial,sans-serif;font-size:10px;color:#4a7a5a;">
+        Questions? Reply to this email or contact Chuck Fingerman, League Administrator.</p>
+    </td></tr>
+
+  </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+}
+
+// ════════════════════════════════════════════════════════════════
+//  doSendAnnouncement(subject, body, testMode)
+//  Called by the dialog after the admin confirms.
+//  testMode=true → sends only to admin email for preview.
+//  testMode=false → sends to all active members.
+// ════════════════════════════════════════════════════════════════
+function resolveAnnouncementImage(ref) {
+  // Returns { src, options } -- Drive link/ID is embedded inline; https URL is linked.
+  if (!ref) return { src: '', options: {} };
+  const m = ref.match(/\/d\/([\w-]{20,})/) || ref.match(/[?&]id=([\w-]{20,})/) ||
+            (/^[\w-]{25,}$/.test(ref) ? [null, ref] : null);
+  if (m) {
+    const blob = DriveApp.getFileById(m[1]).getBlob();
+    return { src: 'cid:announceImg', options: { inlineImages: { announceImg: blob } } };
+  }
+  if (/^https:\/\//i.test(ref)) return { src: ref, options: {} };
+  throw new Error('Image must be a Google Drive link or an https:// URL.');
+}
+
+function doSendAnnouncement(subject, body, testMode, imageRef) {
+  const cfg        = getSheetConfig();
+  const adminList  = getAdminRecipients(cfg);
+  const adminEmail = cfg.adminEmail || 'monrovian@gmail.com';
+  const membersJson = PropertiesService.getScriptProperties()
+                        .getProperty('ANNOUNCEMENT_MEMBERS');
+
+  if (!membersJson) return 'ERROR: Member list not found. Please try again.';
+
+  const allMembers = JSON.parse(membersJson);
+  const seasonDate = cfg.seasonStart
+    ? Utilities.formatDate(new Date(cfg.seasonStart + 'T12:00:00'),
+        Session.getScriptTimeZone(), 'MMMM d, yyyy')
+    : 'session start date';
+  const totalSlots = cfg.totalSlots || 24;
+  const signupLink = 'https://cqr.la/CUPY';
+  let sent = 0, failed = 0, failedNames = [];
+  let img;
+  try { img = resolveAnnouncementImage(imageRef); }
+  catch (err) { return 'Image problem: ' + err.message; }
+
+  // ── Test mode: send only to admin ──
+  if (testMode) {
+    const testBodyText = 'Hi Chuck,\n\n' +
+      '[ [ TEST MODE ] \u2014 preview only. ' + allMembers.length + ' members would receive this. ]\n\n' +
+      body;
+    const testHtml = buildAnnouncementHtml('Chuck', body, seasonDate, totalSlots, signupLink, img.src)
+      .replace('<h1 ', '<p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:11px;background:#8b0000;color:#fff;padding:6px 12px;border-radius:4px;">[ TEST MODE ] \u2014 ' + allMembers.length + ' members would receive this in a live send.</p><h1 ');
+    try {
+      GmailApp.sendEmail(adminEmail, '[TEST] ' + subject, testBodyText, Object.assign({ htmlBody: testHtml }, img.options));
+      Logger.log('TEST email sent to: ' + adminEmail);
+    } catch(err) {
+      Logger.log('TEST email failed: ' + err.message);
+      return 'Test email failed: ' + err.message;
+    }
+    PropertiesService.getScriptProperties().deleteProperty('ANNOUNCEMENT_MEMBERS');
+    return 'Test email sent to ' + adminEmail + '.\n\nCheck your inbox to preview, then open the dialog again to send to all ' + allMembers.length + ' members.';
+  }
+
+  // ── Live mode: send to all members ──
+  allMembers.forEach(function(m) {
+    const plainText = 'Hi ' + m.fname + ',\n\n' + body;
+    const htmlBody  = buildAnnouncementHtml(m.fname, body, seasonDate, totalSlots, signupLink, img.src);
+    try {
+      GmailApp.sendEmail(m.email, subject, plainText, Object.assign({ htmlBody: htmlBody }, img.options));
+      Logger.log('Sent: ' + m.fname + ' ' + m.lname + ' <' + m.email + '>');
+      sent++;
+    } catch(err) {
+      Logger.log('FAILED: ' + m.email + ' \u2014 ' + err.message);
+      failedNames.push(m.fname + ' ' + m.lname);
+      failed++;
+    }
+  });
+
+  // Clean up stored member list
+  PropertiesService.getScriptProperties().deleteProperty('ANNOUNCEMENT_MEMBERS');
+
+  // Admin summary email
+  const summary =
+    'Session announcement emails sent.\n\n' +
+    'Sent:   ' + sent + '\n' +
+    'Failed: ' + failed +
+    (failedNames.length ? '\n\nFailed recipients:\n' + failedNames.join('\n') : '') +
+    '\n\nSubject: ' + subject +
+    '\nSignup link: ' + signupLink;
+
+  try {
+    GmailApp.sendEmail(
+      adminList,
+      '[Billiard League] Announcement Sent 2014 ' + sent + ' members',
+      summary
+    );
+  } catch(err) {
+    Logger.log('Admin summary email failed: ' + err.message);
+  }
+
+  Logger.log('=== ANNOUNCEMENT COMPLETE: ' + sent + ' sent, ' + failed + ' failed ===');
+  return sent + ' emails sent successfully.' +
+    (failed ? '\n' + failed + ' failed \u2014 check Execution log for details.' : '');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  cancelAnnouncement() — called if admin clicks Cancel in dialog
+// ════════════════════════════════════════════════════════════════
+function cancelAnnouncement() {
+  PropertiesService.getScriptProperties().deleteProperty('ANNOUNCEMENT_MEMBERS');
+  Logger.log('Announcement cancelled by admin.');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  showAnnouncementResult(msg) — shows result alert after dialog closes
+// ════════════════════════════════════════════════════════════════
+function showAnnouncementResult(msg) {
+  SpreadsheetApp.getUi().alert('Announcement Complete', msg, SpreadsheetApp.getUi().ButtonSet.OK);
+}
